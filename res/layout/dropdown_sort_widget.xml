@@ -47,6 +47,7 @@
         android:background="@drawable/dropdown_sort_widget_background"
         android:padding="5dp"
         android:src="@drawable/ic_sort_arrow"
-        android:accessibilityTraversalAfter="@id/sort_dimen_dropdown"/>
+        android:accessibilityTraversalAfter="@id/sort_dimen_dropdown"
+        android:tint="@color/sort_widget_text_color" />
 
 </LinearLayout>
