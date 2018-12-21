@@ -25,9 +25,9 @@
     </style>
     <style name="ActionBarPopupTheme" parent="@*android:style/ThemeOverlay.Material.Light" />
 
-    <style name="SortPopupMenuTheme" parent="@android:style/Theme.DeviceDefault.Light.Dialog" />
+    <style name="SortPopupMenuTheme" parent="@android:style/Theme.Material.Light.Dialog" />
 
-    <style name="DialogTheme" parent="@android:style/Theme.DeviceDefault.Light.Dialog.Alert" >
+    <style name="DialogTheme" parent="@android:style/Theme.Material.Light.Dialog.Alert" >
         <item name="android:colorAccent">@color/accent</item>
     </style>
 
