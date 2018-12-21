@@ -10,6 +10,7 @@ LOCAL_PACKAGE_NAME := DocumentsUI
 LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 LOCAL_FULL_MANIFEST_FILE := $(LOCAL_PATH)/AndroidManifest.xml
+LOCAL_DEX_PREOPT := false
 
 include $(LOCAL_PATH)/build_apk.mk
 
