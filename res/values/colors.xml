@@ -45,6 +45,7 @@
     <color name="item_hover_color">#ffe0e0e0</color>
 
     <color name="sort_widget_text_color">#de000000</color>
+    <color name="sort_widget_bg_color">@color/item_doc_background</color>
 
     <color name="root_icon_color">#ff5a5a5a</color>
     <item name="root_icon_disabled_alpha" format="float" type="dimen">@*android:dimen/disabled_alpha_material_light</item>
@@ -56,6 +57,7 @@
     <color name="item_doc_title_disabled">@*android:color/secondary_text_default_material_light</color>
     <color name="item_doc_details">#ff333333</color>
     <color name="item_doc_background">@*android:color/white</color>
+    <color name="item_list_background">@color/directory_background</color>
     <color name="item_doc_background_disabled">#fff4f4f4</color>
     <color name="item_doc_background_selected">#4d3367d6</color>
     <color name="item_breadcrumb_background_hovered">#1affffff</color>
