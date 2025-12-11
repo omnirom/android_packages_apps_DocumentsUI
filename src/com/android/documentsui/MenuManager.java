@@ -18,6 +18,7 @@ package com.android.documentsui;
 
 import static com.android.documentsui.util.FlagUtils.isUseMaterial3FlagEnabled;
 import static com.android.documentsui.util.FlagUtils.isZipNgFlagEnabled;
+import static com.android.documentsui.util.Material3Config.getRes;
 
 import android.view.KeyboardShortcutGroup;
 import android.view.Menu;
@@ -65,20 +66,28 @@ public abstract class MenuManager {
 
     /** @see ActionModeController */
     public void updateActionMenu(Menu menu, SelectionDetails selection) {
-        updateOpenWith(menu.findItem(R.id.action_menu_open_with), selection);
-        updateDelete(menu.findItem(R.id.action_menu_delete), selection);
-        updateShare(menu.findItem(R.id.action_menu_share), selection);
-        updateRename(menu.findItem(R.id.action_menu_rename), selection);
-        updateSelect(menu.findItem(R.id.action_menu_select), selection);
-        updateSelectAll(menu.findItem(R.id.action_menu_select_all), selection);
-        updateDeselectAll(menu.findItem(R.id.action_menu_deselect_all), selection);
-        updateMoveTo(menu.findItem(R.id.action_menu_move_to), selection);
-        updateCopyTo(menu.findItem(R.id.action_menu_copy_to), selection);
-        updateCompress(menu.findItem(R.id.action_menu_compress), selection);
-        updateExtractTo(menu.findItem(R.id.action_menu_extract_to), selection);
-        updateInspect(menu.findItem(R.id.action_menu_inspect), selection);
-        updateViewInOwner(menu.findItem(R.id.action_menu_view_in_owner), selection);
-        updateSort(menu.findItem(R.id.action_menu_sort));
+        updateOpenWith(menu.findItem(getRes(R.id.action_menu_open_with)), selection);
+        updateDelete(menu.findItem(getRes(R.id.action_menu_delete)), selection);
+        updateShare(menu.findItem(getRes(R.id.action_menu_share)), selection);
+        updateRename(menu.findItem(getRes(R.id.action_menu_rename)), selection);
+        updateSelect(menu.findItem(getRes(R.id.action_menu_select)), selection);
+        updateSelectAll(menu.findItem(getRes(R.id.action_menu_select_all)), selection);
+        updateDeselectAll(menu.findItem(getRes(R.id.action_menu_deselect_all)), selection);
+        updateMoveTo(menu.findItem(getRes(R.id.action_menu_move_to)), selection);
+        updateCopyTo(menu.findItem(getRes(R.id.action_menu_copy_to)), selection);
+        updateCompress(menu.findItem(getRes(R.id.action_menu_compress)), selection);
+        updateExtractTo(menu.findItem(getRes(R.id.action_menu_extract_to)), selection);
+        updateInspect(menu.findItem(getRes(R.id.action_menu_inspect)), selection);
+        updateViewInOwner(menu.findItem(getRes(R.id.action_menu_view_in_owner)), selection);
+        updateSort(menu.findItem(getRes(R.id.action_menu_sort)));
+        updateMoveToTrash(menu.findItem(getRes(R.id.action_menu_move_to_trash)), selection);
+        updateRestoreFromTrash(menu.findItem(getRes(R.id.action_menu_restore_from_trash)),
+                selection);
+
+        if (isZipNgFlagEnabled()) {
+            updateExtractHere(menu.findItem(getRes(R.id.action_menu_extract_here)), selection);
+            updateBrowse(menu.findItem(getRes(R.id.action_menu_browse)), selection);
+        }
 
         Menus.disableHiddenItems(menu);
     }
@@ -93,22 +102,23 @@ public abstract class MenuManager {
         if (mOptionMenu == null) {
             return;
         }
-        updateCreateDir(mOptionMenu.findItem(R.id.option_menu_create_dir));
+        updateCreateDir(mOptionMenu.findItem(getRes(R.id.option_menu_create_dir)));
         if (isZipNgFlagEnabled()) {
-            updateExtractAll(mOptionMenu.findItem(R.id.option_menu_extract_all));
+            updateExtractAll(mOptionMenu.findItem(getRes(R.id.option_menu_extract_all)));
         }
-        updateSettings(mOptionMenu.findItem(R.id.option_menu_settings));
-        updateSelectAll(mOptionMenu.findItem(R.id.option_menu_select_all));
-        updateNewWindow(mOptionMenu.findItem(R.id.option_menu_new_window));
-        updateDebug(mOptionMenu.findItem(R.id.option_menu_debug));
-        updateInspect(mOptionMenu.findItem(R.id.option_menu_inspect));
-        updateSort(mOptionMenu.findItem(R.id.option_menu_sort));
-        updateLauncher(mOptionMenu.findItem(R.id.option_menu_launcher));
-        updateShowHiddenFiles(mOptionMenu.findItem(R.id.option_menu_show_hidden_files));
+        updateSettings(mOptionMenu.findItem(getRes(R.id.option_menu_settings)));
+        updateSelectAll(mOptionMenu.findItem(getRes(R.id.option_menu_select_all)));
+        updateNewWindow(mOptionMenu.findItem(getRes(R.id.option_menu_new_window)));
+        updateDebug(mOptionMenu.findItem(getRes(R.id.option_menu_debug)));
+        updateInspect(mOptionMenu.findItem(getRes(R.id.option_menu_inspect)));
+        updateSort(mOptionMenu.findItem(getRes(R.id.option_menu_sort)));
+        updateLauncher(mOptionMenu.findItem(getRes(R.id.option_menu_launcher)));
+        updateShowHiddenFiles(mOptionMenu.findItem(getRes(R.id.option_menu_show_hidden_files)));
 
         if (isUseMaterial3FlagEnabled()) {
-            updateModePicker(mOptionMenu.findItem(R.id.sub_menu_grid),
-                    mOptionMenu.findItem(R.id.sub_menu_list));
+            updateModePicker(
+                    mOptionMenu.findItem(getRes(R.id.sub_menu_grid)),
+                    mOptionMenu.findItem(getRes(R.id.sub_menu_list)));
         }
 
         Menus.disableHiddenItems(mOptionMenu);
@@ -123,8 +133,9 @@ public abstract class MenuManager {
                 return;
             }
         }
-        updateModePicker(menu.findItem(R.id.sub_menu_grid), menu.findItem(R.id.sub_menu_list));
-
+        updateModePicker(
+                menu.findItem(getRes(R.id.sub_menu_grid)),
+                menu.findItem(getRes(R.id.sub_menu_list)));
     }
 
     public void updateModel(Model model) {}
@@ -172,11 +183,11 @@ public abstract class MenuManager {
     public void updateContextMenuForFiles(Menu menu, SelectionDetails selectionDetails) {
         assert selectionDetails != null;
 
-        MenuItem share = menu.findItem(R.id.dir_menu_share);
-        MenuItem open = menu.findItem(R.id.dir_menu_open);
-        MenuItem openWith = menu.findItem(R.id.dir_menu_open_with);
-        MenuItem rename = menu.findItem(R.id.dir_menu_rename);
-        MenuItem viewInOwner = menu.findItem(R.id.dir_menu_view_in_owner);
+        MenuItem share = menu.findItem(getRes(R.id.dir_menu_share));
+        MenuItem open = menu.findItem(getRes(R.id.dir_menu_open));
+        MenuItem openWith = menu.findItem(getRes(R.id.dir_menu_open_with));
+        MenuItem rename = menu.findItem(getRes(R.id.dir_menu_rename));
+        MenuItem viewInOwner = menu.findItem(getRes(R.id.dir_menu_view_in_owner));
 
         updateShare(share, selectionDetails);
         updateOpenInContextMenu(open, selectionDetails);
@@ -185,8 +196,8 @@ public abstract class MenuManager {
         updateViewInOwner(viewInOwner, selectionDetails);
 
         if (isZipNgFlagEnabled()) {
-            updateExtractHere(menu.findItem(R.id.dir_menu_extract_here), selectionDetails);
-            updateBrowse(menu.findItem(R.id.dir_menu_browse), selectionDetails);
+            updateExtractHere(menu.findItem(getRes(R.id.dir_menu_extract_here)), selectionDetails);
+            updateBrowse(menu.findItem(getRes(R.id.dir_menu_browse)), selectionDetails);
         }
 
         updateContextMenu(menu, selectionDetails);
@@ -206,9 +217,9 @@ public abstract class MenuManager {
     public void updateContextMenuForDirs(Menu menu, SelectionDetails selectionDetails) {
         assert selectionDetails != null;
 
-        MenuItem openInNewWindow = menu.findItem(R.id.dir_menu_open_in_new_window);
-        MenuItem rename = menu.findItem(R.id.dir_menu_rename);
-        MenuItem pasteInto = menu.findItem(R.id.dir_menu_paste_into_folder);
+        MenuItem openInNewWindow = menu.findItem(getRes(R.id.dir_menu_open_in_new_window));
+        MenuItem rename = menu.findItem(getRes(R.id.dir_menu_rename));
+        MenuItem pasteInto = menu.findItem(getRes(R.id.dir_menu_paste_into_folder));
 
         updateOpenInNewWindow(openInNewWindow, selectionDetails);
         updateRename(rename, selectionDetails);
@@ -226,10 +237,10 @@ public abstract class MenuManager {
     public void updateContextMenu(Menu menu, SelectionDetails selectionDetails) {
         assert selectionDetails != null;
 
-        MenuItem cut = menu.findItem(R.id.dir_menu_cut_to_clipboard);
-        MenuItem copy = menu.findItem(R.id.dir_menu_copy_to_clipboard);
-        MenuItem delete = menu.findItem(R.id.dir_menu_delete);
-        MenuItem inspect = menu.findItem(R.id.dir_menu_inspect);
+        MenuItem cut = menu.findItem(getRes(R.id.dir_menu_cut_to_clipboard));
+        MenuItem copy = menu.findItem(getRes(R.id.dir_menu_copy_to_clipboard));
+        MenuItem delete = menu.findItem(getRes(R.id.dir_menu_delete));
+        MenuItem inspect = menu.findItem(getRes(R.id.dir_menu_inspect));
 
         final boolean canCopy =
                 selectionDetails.size() > 0 && !selectionDetails.containsPartialFiles();
@@ -240,7 +251,7 @@ public abstract class MenuManager {
 
         Menus.setEnabledAndVisible(inspect, selectionDetails.size() == 1);
 
-        updateCompress(menu.findItem(R.id.dir_menu_compress), selectionDetails);
+        updateCompress(menu.findItem(getRes(R.id.dir_menu_compress)), selectionDetails);
     }
 
     /**
@@ -250,11 +261,11 @@ public abstract class MenuManager {
      */
     @VisibleForTesting
     public void updateContextMenuForContainer(Menu menu, SelectionDetails selectionDetails) {
-        MenuItem paste = menu.findItem(R.id.dir_menu_paste_from_clipboard);
-        MenuItem selectAll = menu.findItem(R.id.dir_menu_select_all);
-        MenuItem deselectAll = menu.findItem(R.id.dir_menu_deselect_all);
-        MenuItem createDir = menu.findItem(R.id.dir_menu_create_dir);
-        MenuItem inspect = menu.findItem(R.id.dir_menu_inspect);
+        MenuItem paste = menu.findItem(getRes(R.id.dir_menu_paste_from_clipboard));
+        MenuItem selectAll = menu.findItem(getRes(R.id.dir_menu_select_all));
+        MenuItem deselectAll = menu.findItem(getRes(R.id.dir_menu_deselect_all));
+        MenuItem createDir = menu.findItem(getRes(R.id.dir_menu_create_dir));
+        MenuItem inspect = menu.findItem(getRes(R.id.dir_menu_inspect));
 
         Menus.setEnabledAndVisible(paste,
                 mDirDetails.hasItemsToPaste() && mDirDetails.canCreateDoc());
@@ -268,10 +279,10 @@ public abstract class MenuManager {
      * @see RootsFragment#onCreateContextMenu
      */
     public void updateRootContextMenu(Menu menu, RootInfo root, DocumentInfo docInfo) {
-        MenuItem eject = menu.findItem(R.id.root_menu_eject_root);
-        MenuItem pasteInto = menu.findItem(R.id.root_menu_paste_into_folder);
-        MenuItem openInNewWindow = menu.findItem(R.id.root_menu_open_in_new_window);
-        MenuItem settings = menu.findItem(R.id.root_menu_settings);
+        MenuItem eject = menu.findItem(getRes(R.id.root_menu_eject_root));
+        MenuItem pasteInto = menu.findItem(getRes(R.id.root_menu_paste_into_folder));
+        MenuItem openInNewWindow = menu.findItem(getRes(R.id.root_menu_open_in_new_window));
+        MenuItem settings = menu.findItem(getRes(R.id.root_menu_settings));
 
         updateEject(eject, root);
         updatePasteInto(pasteInto, root, docInfo);
@@ -304,9 +315,10 @@ public abstract class MenuManager {
 
     protected void updateShowHiddenFiles(MenuItem showHidden) {
         Menus.setEnabledAndVisible(showHidden, true);
-        showHidden.setTitle(mState.showHiddenFiles
-                ? R.string.menu_hide_hidden_files
-                : R.string.menu_show_hidden_files);
+        showHidden.setTitle(
+                mState.showHiddenFiles
+                        ? getRes(R.string.menu_hide_hidden_files)
+                        : getRes(R.string.menu_show_hidden_files));
     }
 
     protected void updateSort(MenuItem sort) {
@@ -390,8 +402,8 @@ public abstract class MenuManager {
         Menus.setEnabledAndVisible(copyTo, false);
     }
 
-    protected void updateCompress(MenuItem compress, SelectionDetails selectionDetails) {
-        Menus.setEnabledAndVisible(compress, false);
+    protected void updateCompress(@NonNull MenuItem it, @NonNull SelectionDetails selection) {
+        Menus.setEnabledAndVisible(it, false);
     }
 
     protected void updateExtractTo(MenuItem extractTo, SelectionDetails selectionDetails) {
@@ -424,6 +436,15 @@ public abstract class MenuManager {
 
     protected void updateExtractAll(MenuItem it) {
         Menus.setEnabledAndVisible(it, false);
+    }
+
+    protected void updateMoveToTrash(MenuItem moveToTrash, SelectionDetails selectionDetails) {
+        Menus.setEnabledAndVisible(moveToTrash, false);
+    }
+
+    protected void updateRestoreFromTrash(MenuItem restoreFromTrash,
+            SelectionDetails selectionDetails) {
+        Menus.setEnabledAndVisible(restoreFromTrash, false);
     }
 
     protected abstract void updateSelectAll(MenuItem selectAll);
@@ -463,6 +484,16 @@ public abstract class MenuManager {
          */
         boolean isArchive();
 
+        /**
+         * Returns whether the selection is a single file that can be opened by multiple opening
+         * apps.
+         *
+         * This is a necessary signal to enable "open with" on desktop devices since performing
+         * "open with" with a file that has a single opening app will automatically open that app
+         * (i.e. does not do the expected "open with" behavior).
+         */
+        boolean hasMultipleOpeningApps();
+
         // TODO: Update these to express characteristics instead of answering concrete questions,
         // since the answer to those questions is (or can be) activity specific.
         boolean canDelete();
@@ -476,6 +507,16 @@ public abstract class MenuManager {
         boolean canOpen();
 
         boolean canViewInOwner();
+
+        /**
+         * Check whether to show the trash option on the selection
+         */
+        boolean canTrash();
+
+        /**
+         * Check whether to show the restore option on the selection.
+         */
+        boolean canRestore();
     }
 
     public static class DirectoryDetails {

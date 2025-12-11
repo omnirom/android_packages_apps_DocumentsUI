@@ -44,6 +44,7 @@ import android.provider.DocumentsContract.Document;
 import android.provider.DocumentsContract.Root;
 import android.test.MoreAsserts;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -57,7 +58,10 @@ import com.google.common.collect.Lists;
 import libcore.io.Streams;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,6 +69,7 @@ import java.util.List;
  * Provides support for creation of documents in a test settings.
  */
 public class DocumentsProviderHelper {
+    private static final String TAG = "DocumentsProviderHelper";
 
     private final UserId mUserId;
     private final String mAuthority;
@@ -143,6 +148,17 @@ public class DocumentsProviderHelper {
 
     public Uri createFolder(RootInfo root, String name) {
         return createDocument(root, Document.MIME_TYPE_DIR, name);
+    }
+
+    public void writeDocument(Uri documentUri, InputStream contents)
+            throws RemoteException, IOException {
+        try (ParcelFileDescriptor fd = mClient.openFile(documentUri, "w", null)) {
+            assert fd != null;
+            try (OutputStream out = new FileOutputStream(fd.getFileDescriptor())) {
+                FileUtils.copy(contents, out);
+            }
+        }
+        waitForWrite();
     }
 
     public void writeDocument(Uri documentUri, byte[] contents)
@@ -295,8 +311,31 @@ public class DocumentsProviderHelper {
         Uri uri = buildChildDocumentsUri(mAuthority, documentId);
         List<DocumentInfo> children = new ArrayList<>();
         try (Cursor cursor = mClient.query(uri, null, null, null, null, null)) {
-            Cursor wrapper = new RootCursorWrapper(mUserId, mAuthority, "totally-fake", cursor,
-                    maxCount);
+            if (cursor == null) {
+                Log.w(TAG, "query() returned null cursor");
+            } else {
+                Cursor wrapper = new RootCursorWrapper(mUserId, mAuthority, "totally-fake", cursor,
+                        maxCount);
+                while (wrapper.moveToNext()) {
+                    children.add(DocumentInfo.fromDirectoryCursor(wrapper));
+                }
+            }
+        }
+        return children;
+    }
+
+    /** List all the children for the specific `root`. */
+    public List<DocumentInfo> listAllChildren(RootInfo root) throws Exception {
+        List<DocumentInfo> children = new ArrayList<>();
+        try (Cursor cursor =
+                mClient.query(
+                        buildChildDocumentsUri(root.authority, root.documentId),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)) {
+            Cursor wrapper = new RootCursorWrapper(mUserId, mAuthority, root.rootId, cursor, 100);
             while (wrapper.moveToNext()) {
                 children.add(DocumentInfo.fromDirectoryCursor(wrapper));
             }

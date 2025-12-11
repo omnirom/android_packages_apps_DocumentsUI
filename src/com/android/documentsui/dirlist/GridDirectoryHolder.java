@@ -19,6 +19,8 @@ package com.android.documentsui.dirlist;
 import static com.android.documentsui.DevicePolicyResources.Drawables.Style.SOLID_COLORED;
 import static com.android.documentsui.DevicePolicyResources.Drawables.WORK_PROFILE_ICON;
 import static com.android.documentsui.base.DocumentInfo.getCursorString;
+import static com.android.documentsui.util.FlagUtils.isSingleClickToSelectEnabled;
+import static com.android.documentsui.util.Material3Config.getRes;
 
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
@@ -34,11 +36,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
+import androidx.recyclerview.selection.ItemDetailsLookup.ItemDetails;
 
 import com.android.documentsui.ConfigStore;
 import com.android.documentsui.DocumentsApplication;
 import com.android.documentsui.IconUtils;
 import com.android.documentsui.R;
+import com.android.documentsui.base.Events;
 import com.android.documentsui.base.State;
 import com.android.documentsui.base.UserId;
 import com.android.documentsui.ui.Views;
@@ -59,13 +63,13 @@ final class GridDirectoryHolder extends DocumentHolder {
 
     GridDirectoryHolder(
             Context context, ViewGroup parent, IconHelper iconHelper, ConfigStore configStore) {
-        super(context, parent, R.layout.item_dir_grid, configStore);
+        super(context, parent, getRes(R.layout.item_dir_grid), configStore);
 
-        mIconLayout = itemView.findViewById(R.id.icon);
+        mIconLayout = itemView.findViewById(getRes(R.id.icon));
         mTitle = (TextView) itemView.findViewById(android.R.id.title);
-        mIconMime = (ImageView) itemView.findViewById(R.id.icon_mime_sm);
-        mIconCheck = (ImageView) itemView.findViewById(R.id.icon_check);
-        mIconBadge = (ImageView) itemView.findViewById(R.id.icon_profile_badge);
+        mIconMime = (ImageView) itemView.findViewById(getRes(R.id.icon_mime_sm));
+        mIconCheck = (ImageView) itemView.findViewById(getRes(R.id.icon_check));
+        mIconBadge = (ImageView) itemView.findViewById(getRes(R.id.icon_profile_badge));
         mIconMime.setImageDrawable(
                 IconUtils.loadMimeIcon(context, DocumentsContract.Document.MIME_TYPE_DIR));
         mIconHelper = iconHelper;
@@ -78,8 +82,12 @@ final class GridDirectoryHolder extends DocumentHolder {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private void setUpdatableWorkProfileIcon(Context context) {
         DevicePolicyManager dpm = context.getSystemService(DevicePolicyManager.class);
-        Drawable drawable = dpm.getResources().getDrawable(WORK_PROFILE_ICON, SOLID_COLORED, () ->
-                context.getDrawable(R.drawable.ic_briefcase));
+        Drawable drawable =
+                dpm.getResources()
+                        .getDrawable(
+                                WORK_PROFILE_ICON,
+                                SOLID_COLORED,
+                                () -> context.getDrawable(getRes(R.drawable.ic_briefcase)));
         mIconBadge.setImageDrawable(drawable);
     }
 
@@ -120,9 +128,18 @@ final class GridDirectoryHolder extends DocumentHolder {
     }
 
     @Override
-    public boolean inSelectRegion(MotionEvent event) {
-        return mAction == State.ACTION_BROWSE ? Views.isEventOver(event, itemView.getParent(),
-                mIconLayout) : false;
+    public int classifySelectionHotspot(MotionEvent event) {
+        if (mAction != State.ACTION_BROWSE) {
+            // No-op.
+
+        } else if (Views.isEventOver(event, itemView.getParent(), mIconLayout)) {
+            return ItemDetails.SELECTION_HOTSPOT_INSIDE_TOGGLE_MULTI;
+
+        } else if (Events.isMousyEvent(event) && isSingleClickToSelectEnabled()) {
+            return ItemDetails.SELECTION_HOTSPOT_INSIDE_TOGGLE_SOLO;
+        }
+
+        return ItemDetails.SELECTION_HOTSPOT_OUTSIDE;
     }
 
     /**

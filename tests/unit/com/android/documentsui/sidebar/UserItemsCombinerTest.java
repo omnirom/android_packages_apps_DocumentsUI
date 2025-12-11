@@ -18,8 +18,13 @@ package com.android.documentsui.sidebar;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import android.app.admin.DevicePolicyManager;
 import android.content.res.Resources;
+import android.os.UserHandle;
+import android.os.UserManager;
 import android.view.View;
 
 import androidx.test.filters.MediumTest;
@@ -30,7 +35,6 @@ import com.android.documentsui.R;
 import com.android.documentsui.TestConfigStore;
 import com.android.documentsui.base.State;
 import com.android.documentsui.base.UserId;
-import com.android.documentsui.testing.TestProvidersAccess;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.Lists;
@@ -53,9 +57,11 @@ import java.util.Objects;
 @RunWith(AndroidJUnit4.class)
 @MediumTest
 public class UserItemsCombinerTest {
-    private static final UserId PERSONAL_USER = TestProvidersAccess.USER_ID;
-    private static final UserId WORK_USER = TestProvidersAccess.OtherUser.USER_ID;
-    private static final UserId PRIVATE_USER = TestProvidersAccess.AnotherUser.USER_ID;
+    private static final UserId PERSONAL_USER = UserId.of(UserHandle.SYSTEM);
+    private static final UserId WORK_USER =
+            UserId.of(new UserHandle(PERSONAL_USER.getIdentifier() + 1));
+    private static final UserId PRIVATE_USER =
+            UserId.of(new UserHandle(PERSONAL_USER.getIdentifier() + 2));
 
     private static final List<Item> PERSONAL_ITEMS = Lists.newArrayList(
             personalItem("personal 1"),
@@ -80,6 +86,7 @@ public class UserItemsCombinerTest {
     private final State mState = new State();
     private final Resources mResources =
             InstrumentationRegistry.getInstrumentation().getTargetContext().getResources();
+    private final UserManager mMockUserManager = mock(UserManager.class);
     private final DevicePolicyManager mDpm =
             InstrumentationRegistry.getInstrumentation().getTargetContext().getSystemService(
                     DevicePolicyManager.class);
@@ -106,13 +113,16 @@ public class UserItemsCombinerTest {
             mState.canForwardToProfileIdMap.put(PRIVATE_USER, true);
             mTestConfigStore.enablePrivateSpaceInPhotoPicker();
         }
+
+        when(mMockUserManager.isManagedProfile(WORK_USER.getIdentifier())).thenReturn(true);
     }
 
     @Test
     public void testCreatePresentableList_empty() {
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .setRootListForCurrentUser(Collections.emptyList())
-                .setRootListForOtherUser(Collections.emptyList());
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .setRootListForCurrentUser(Collections.emptyList())
+                        .setRootListForOtherUser(Collections.emptyList());
         assertThat(mCombiner.createPresentableList()).isEmpty();
     }
 
@@ -124,17 +134,19 @@ public class UserItemsCombinerTest {
         if (SdkLevel.isAtLeastV()) {
             rootListAllUsers.add(Collections.emptyList());
         }
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .setRootListForAllUsers(rootListAllUsers);
         assertThat(
                 mCombiner.createPresentableListForAllUsers(mUserIds, mUserIdToLabelMap)).isEmpty();
     }
 
     @Test
     public void testCreatePresentableList_currentIsPersonal_personalItemsOnly() {
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .setRootListForCurrentUser(PERSONAL_ITEMS)
-                .setRootListForOtherUser(Collections.emptyList());
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .setRootListForCurrentUser(PERSONAL_ITEMS)
+                        .setRootListForOtherUser(Collections.emptyList());
         assertThat(mCombiner.createPresentableList())
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)
                 .containsExactlyElementsIn(PERSONAL_ITEMS)
@@ -143,10 +155,11 @@ public class UserItemsCombinerTest {
 
     @Test
     public void testCreatePresentableList_currentIsWork_personalItemsOnly() {
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(WORK_USER)
-                .setRootListForCurrentUser(Collections.emptyList())
-                .setRootListForOtherUser(PERSONAL_ITEMS);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(WORK_USER)
+                        .setRootListForCurrentUser(Collections.emptyList())
+                        .setRootListForOtherUser(PERSONAL_ITEMS);
         assertThat(mCombiner.createPresentableList())
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)
                 .containsExactlyElementsIn(PERSONAL_ITEMS)
@@ -161,8 +174,9 @@ public class UserItemsCombinerTest {
         if (SdkLevel.isAtLeastV()) {
             rootListAllUsers.add(Collections.emptyList());
         }
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .setRootListForAllUsers(rootListAllUsers);
         assertThat(mCombiner.createPresentableListForAllUsers(mUserIds, mUserIdToLabelMap))
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)
                 .containsExactlyElementsIn(PERSONAL_ITEMS)
@@ -177,9 +191,10 @@ public class UserItemsCombinerTest {
         if (SdkLevel.isAtLeastV()) {
             rootListAllUsers.add(Collections.emptyList());
         }
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(WORK_USER)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(WORK_USER)
+                        .setRootListForAllUsers(rootListAllUsers);
         assertThat(mCombiner.createPresentableListForAllUsers(mUserIds, mUserIdToLabelMap))
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)
                 .containsExactlyElementsIn(PERSONAL_ITEMS)
@@ -193,9 +208,10 @@ public class UserItemsCombinerTest {
         rootListAllUsers.add(Lists.newArrayList(PERSONAL_ITEMS));
         rootListAllUsers.add(Collections.emptyList());
         rootListAllUsers.add(Collections.emptyList());
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(PRIVATE_USER)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(PRIVATE_USER)
+                        .setRootListForAllUsers(rootListAllUsers);
         assertThat(mCombiner.createPresentableListForAllUsers(mUserIds, mUserIdToLabelMap))
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)
                 .containsExactlyElementsIn(PERSONAL_ITEMS)
@@ -204,9 +220,10 @@ public class UserItemsCombinerTest {
 
     @Test
     public void testCreatePresentableList_currentIsPersonal_workItemsOnly() {
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .setRootListForCurrentUser(Collections.emptyList())
-                .setRootListForOtherUser(WORK_ITEMS);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .setRootListForCurrentUser(Collections.emptyList())
+                        .setRootListForOtherUser(WORK_ITEMS);
         assertThat(mCombiner.createPresentableList())
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)
                 .containsExactlyElementsIn(WORK_ITEMS)
@@ -215,10 +232,11 @@ public class UserItemsCombinerTest {
 
     @Test
     public void testCreatePresentableList_currentIsWork_workItemsOnly() {
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(WORK_USER)
-                .setRootListForCurrentUser(WORK_ITEMS)
-                .setRootListForOtherUser(Collections.emptyList());
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(WORK_USER)
+                        .setRootListForCurrentUser(WORK_ITEMS)
+                        .setRootListForOtherUser(Collections.emptyList());
         assertThat(mCombiner.createPresentableList())
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)
                 .containsExactlyElementsIn(WORK_ITEMS)
@@ -233,9 +251,10 @@ public class UserItemsCombinerTest {
         if (SdkLevel.isAtLeastV()) {
             rootListAllUsers.add(Collections.emptyList());
         }
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(PERSONAL_USER)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(PERSONAL_USER)
+                        .setRootListForAllUsers(rootListAllUsers);
         assertThat(mCombiner.createPresentableListForAllUsers(mUserIds, mUserIdToLabelMap))
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)
                 .containsExactlyElementsIn(WORK_ITEMS)
@@ -250,9 +269,10 @@ public class UserItemsCombinerTest {
         if (SdkLevel.isAtLeastV()) {
             rootListAllUsers.add(Collections.emptyList());
         }
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(WORK_USER)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(WORK_USER)
+                        .setRootListForAllUsers(rootListAllUsers);
         assertThat(mCombiner.createPresentableListForAllUsers(mUserIds, mUserIdToLabelMap))
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)
                 .containsExactlyElementsIn(WORK_ITEMS)
@@ -266,9 +286,10 @@ public class UserItemsCombinerTest {
         rootListAllUsers.add(Collections.emptyList());
         rootListAllUsers.add(Lists.newArrayList(WORK_ITEMS));
         rootListAllUsers.add(Collections.emptyList());
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(PRIVATE_USER)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(PRIVATE_USER)
+                        .setRootListForAllUsers(rootListAllUsers);
         assertThat(mCombiner.createPresentableListForAllUsers(mUserIds, mUserIdToLabelMap))
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)
                 .containsExactlyElementsIn(WORK_ITEMS)
@@ -277,9 +298,11 @@ public class UserItemsCombinerTest {
 
     @Test
     public void testCreatePresentableList_currentIsPersonal_personalAndWorkItems() {
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .setRootListForCurrentUser(PERSONAL_ITEMS)
-                .setRootListForOtherUser(WORK_ITEMS);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(PERSONAL_USER)
+                        .setRootListForCurrentUser(PERSONAL_ITEMS)
+                        .setRootListForOtherUser(WORK_ITEMS);
 
         List<Item> expected = Lists.newArrayList();
         expected.add(new HeaderItem(mResources.getString(R.string.personal_tab)));
@@ -295,10 +318,11 @@ public class UserItemsCombinerTest {
 
     @Test
     public void testCreatePresentableList_currentIsWork_personalAndWorkItems() {
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(WORK_USER)
-                .setRootListForCurrentUser(WORK_ITEMS)
-                .setRootListForOtherUser(PERSONAL_ITEMS);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(WORK_USER)
+                        .setRootListForCurrentUser(WORK_ITEMS)
+                        .setRootListForOtherUser(PERSONAL_ITEMS);
 
         List<Item> expected = Lists.newArrayList();
         expected.add(new HeaderItem(mResources.getString(R.string.personal_tab)));
@@ -320,8 +344,9 @@ public class UserItemsCombinerTest {
         if (SdkLevel.isAtLeastV()) {
             rootListAllUsers.add(PRIVATE_ITEMS);
         }
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .setRootListForAllUsers(rootListAllUsers);
 
         List<Item> expected = Lists.newArrayList();
         expected.add(new HeaderItem("Personal"));
@@ -347,9 +372,10 @@ public class UserItemsCombinerTest {
         if (SdkLevel.isAtLeastV()) {
             rootListAllUsers.add(PRIVATE_ITEMS);
         }
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(WORK_USER)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(WORK_USER)
+                        .setRootListForAllUsers(rootListAllUsers);
 
         List<Item> expected = Lists.newArrayList();
         expected.add(new HeaderItem("Personal"));
@@ -375,9 +401,10 @@ public class UserItemsCombinerTest {
         if (SdkLevel.isAtLeastV()) {
             rootListAllUsers.add(PRIVATE_ITEMS);
         }
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(PRIVATE_USER)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(PRIVATE_USER)
+                        .setRootListForAllUsers(rootListAllUsers);
 
         List<Item> expected = Lists.newArrayList();
         expected.add(new HeaderItem("Personal"));
@@ -398,9 +425,10 @@ public class UserItemsCombinerTest {
     @Test
     public void testCreatePresentableList_currentIsPersonal_personalAndWorkItems_cannotShare() {
         mState.canShareAcrossProfile = false;
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .setRootListForCurrentUser(PERSONAL_ITEMS)
-                .setRootListForOtherUser(WORK_ITEMS);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .setRootListForCurrentUser(PERSONAL_ITEMS)
+                        .setRootListForOtherUser(WORK_ITEMS);
 
         assertThat(mCombiner.createPresentableList())
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)
@@ -411,10 +439,11 @@ public class UserItemsCombinerTest {
     @Test
     public void testCreatePresentableList_currentIsWork_personalItemsOnly_cannotShare() {
         mState.canShareAcrossProfile = false;
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(WORK_USER)
-                .setRootListForCurrentUser(Collections.emptyList())
-                .setRootListForOtherUser(PERSONAL_ITEMS);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(WORK_USER)
+                        .setRootListForCurrentUser(Collections.emptyList())
+                        .setRootListForOtherUser(PERSONAL_ITEMS);
 
         assertThat(mCombiner.createPresentableList()).isEmpty();
     }
@@ -429,8 +458,9 @@ public class UserItemsCombinerTest {
         if (SdkLevel.isAtLeastV()) {
             rootListAllUsers.add(PRIVATE_ITEMS);
         }
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .setRootListForAllUsers(rootListAllUsers);
 
         List<Item> expected = Lists.newArrayList();
         expected.add(new HeaderItem("Personal"));
@@ -460,9 +490,10 @@ public class UserItemsCombinerTest {
         if (SdkLevel.isAtLeastV()) {
             rootListAllUsers.add(PRIVATE_ITEMS);
         }
-        mCombiner = new UserItemsCombiner(mResources, mDpm, mState)
-                .overrideCurrentUserForTest(WORK_USER)
-                .setRootListForAllUsers(rootListAllUsers);
+        mCombiner =
+                new UserItemsCombiner(mResources, mMockUserManager, mDpm, mState)
+                        .overrideCurrentUserForTest(WORK_USER)
+                        .setRootListForAllUsers(rootListAllUsers);
 
         assertThat(mCombiner.createPresentableListForAllUsers(mUserIds, mUserIdToLabelMap))
                 .comparingElementsUsing(ITEM_CORRESPONDENCE)

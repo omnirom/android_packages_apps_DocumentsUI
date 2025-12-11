@@ -16,6 +16,8 @@
 
 package com.android.documentsui.sidebar;
 
+import static com.android.documentsui.util.Material3Config.getRes;
+
 import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -36,6 +38,13 @@ import com.android.documentsui.base.UserId;
  */
 public abstract class Item {
     private final @LayoutRes int mLayoutId;
+    /**
+     * This is to manage the item selection state in RecyclerView, with ListView the selection
+     * state is managed by the list via `setChoiceMode`, but there's no such thing in RecyclerView,
+     * we need to maintain that in the model layer here and do control the selection logic in the
+     * adapter.
+     */
+    private boolean mIsSelected;
 
     public final String title;
     public final UserId userId;
@@ -50,11 +59,11 @@ public abstract class Item {
 
     public View getView(View convertView, ViewGroup parent) {
         if (convertView == null
-                || (Integer) convertView.getTag(R.id.layout_id_tag) != mLayoutId) {
+                || (Integer) convertView.getTag(getRes(R.id.layout_id_tag)) != mLayoutId) {
             convertView = LayoutInflater.from(parent.getContext())
                     .inflate(mLayoutId, parent, false);
         }
-        convertView.setTag(R.id.layout_id_tag, mLayoutId);
+        convertView.setTag(getRes(R.id.layout_id_tag), mLayoutId);
         bindView(convertView);
         return convertView;
     }
@@ -92,4 +101,12 @@ public abstract class Item {
     }
 
     void createContextMenu(Menu menu, MenuInflater inflater, MenuManager menuManager) {}
+
+    public void setSelected(boolean selected) {
+        mIsSelected = selected;
+    }
+
+    public boolean isSelected() {
+        return mIsSelected;
+    }
 }

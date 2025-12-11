@@ -16,27 +16,20 @@
 
 package com.android.documentsui;
 
+import static org.junit.Assert.assertEquals;
+
 import android.Manifest;
 import android.content.pm.PackageManager;
+
+import androidx.test.filters.LargeTest;
 
 import com.android.documentsui.files.FilesActivity;
 import com.android.documentsui.util.VersionUtils;
 
 import org.junit.Test;
 
-public class PermissionsTest extends ActivityTest<FilesActivity> {
-
-    private static final String TAG = "PermissionsTest";
-
-    public PermissionsTest() {
-        super(FilesActivity.class);
-    }
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
+@LargeTest
+public class PermissionsTest extends ActivityTestJunit4<FilesActivity> {
     @Test
     public void testPermissionGranted_interactAcrossUsersOnR() {
         if (VersionUtils.isAtLeastR()) {

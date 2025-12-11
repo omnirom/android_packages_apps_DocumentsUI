@@ -16,6 +16,8 @@
 
 package com.android.documentsui.base;
 
+import static android.provider.DocumentsContract.Document.MIME_TYPE_DIR;
+
 import static androidx.core.util.Preconditions.checkArgument;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -25,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.provider.DocumentsContract;
 import android.test.AndroidTestCase;
@@ -33,6 +36,7 @@ import androidx.test.filters.SmallTest;
 import androidx.test.rule.provider.ProviderTestRule;
 
 import com.android.documentsui.InspectorProvider;
+import com.android.documentsui.archives.ArchivesProvider;
 import com.android.documentsui.testing.TestProvidersAccess;
 import com.android.documentsui.util.VersionUtils;
 
@@ -134,7 +138,7 @@ public class DocumentInfoTest extends AndroidTestCase {
 
         assertThat(mimeTypes.size()).isEqualTo(1);
 
-        assertThat(mimeTypes.contains(DocumentsContract.Document.MIME_TYPE_DIR)).isTrue();
+        assertThat(mimeTypes.contains(MIME_TYPE_DIR)).isTrue();
     }
 
     @Test
@@ -201,5 +205,86 @@ public class DocumentInfoTest extends AndroidTestCase {
             assertThat(otherUserDoc.getTreeDocumentUri().getUserInfo())
                     .isEqualTo(otherUserDoc.getDocumentUri().getUserInfo());
         }
+    }
+
+    @Test
+    public void testTextFile() throws Exception {
+        final DocumentInfo doc = createDocInfo("authority.a", "doc.1", "text/plain");
+        assertThat(doc.isArchive()).isFalse();
+        assertThat(doc.isContainer()).isFalse();
+        assertThat(doc.isDirectory()).isFalse();
+        assertThat(doc.isInArchive()).isFalse();
+    }
+
+    @Test
+    public void testDirectory() throws Exception {
+        final DocumentInfo doc = createDocInfo("authority.a", "doc.1", MIME_TYPE_DIR);
+        assertThat(doc.isArchive()).isFalse();
+        assertThat(doc.isContainer()).isTrue();
+        assertThat(doc.isDirectory()).isTrue();
+        assertThat(doc.isInArchive()).isFalse();
+    }
+
+    @Test
+    public void testArchive() throws Exception {
+        final DocumentInfo doc = createDocInfo("authority.a", "doc.1", "application/zip");
+        assertThat(doc.isArchive()).isTrue();
+        assertThat(doc.isContainer()).isTrue();
+        assertThat(doc.isDirectory()).isFalse();
+        assertThat(doc.isInArchive()).isFalse();
+    }
+
+    @Test
+    public void testTextFileInArchive() throws Exception {
+        final DocumentInfo doc = createDocInfo(ArchivesProvider.AUTHORITY, "doc.1", "text/plain");
+        assertThat(doc.isArchive()).isFalse();
+        assertThat(doc.isContainer()).isFalse();
+        assertThat(doc.isDirectory()).isFalse();
+        assertThat(doc.isInArchive()).isTrue();
+    }
+
+    @Test
+    public void testDirectoryInArchive() throws Exception {
+        final DocumentInfo doc = createDocInfo(ArchivesProvider.AUTHORITY, "doc.1", MIME_TYPE_DIR);
+        assertThat(doc.isArchive()).isFalse();
+        assertThat(doc.isContainer()).isTrue();
+        assertThat(doc.isDirectory()).isTrue();
+        assertThat(doc.isInArchive()).isTrue();
+    }
+
+    @Test
+    public void testArchiveInArchive() throws Exception {
+        final DocumentInfo doc = createDocInfo(ArchivesProvider.AUTHORITY, "doc.1",
+                "application/zip");
+        assertThat(doc.isArchive()).isTrue();
+        assertThat(doc.isContainer()).isFalse();
+        assertThat(doc.isDirectory()).isFalse();
+        assertThat(doc.isInArchive()).isTrue();
+    }
+
+    @Test
+    public void testGetCursorInt() {
+        Cursor cursor = mock(Cursor.class);
+        String columnName = "column";
+        int index = 0;
+        int value = 5;
+
+        // When cursor is null, the default value value should be returned.
+        assertThat(DocumentInfo.getCursorInt(null, columnName)).isEqualTo(0);
+        assertThat(DocumentInfo.getCursorInt(null, columnName, /*returnIfMissingOrNull=*/
+                -10)).isEqualTo(-10);
+
+        // When the column has no index (-1), the default value value should be returned.
+        when(cursor.getColumnIndex(columnName)).thenReturn(-1);
+        assertThat(DocumentInfo.getCursorInt(cursor, columnName)).isEqualTo(0);
+        assertThat(DocumentInfo.getCursorInt(cursor, columnName, /*returnIfMissingOrNull=*/
+                -10)).isEqualTo(-10);
+
+        // When the column has a valid, the column's value should be returned.
+        when(cursor.getColumnIndex(columnName)).thenReturn(index);
+        when(cursor.getInt(index)).thenReturn(value);
+        assertThat(DocumentInfo.getCursorInt(cursor, columnName)).isEqualTo(value);
+        assertThat(DocumentInfo.getCursorInt(cursor, columnName, /*returnIfMissingOrNull=*/
+                -10)).isEqualTo(value);
     }
 }

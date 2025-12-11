@@ -25,8 +25,10 @@ import androidx.recyclerview.selection.ItemKeyProvider;
 import androidx.recyclerview.selection.MutableSelection;
 import androidx.recyclerview.selection.Selection;
 import androidx.recyclerview.selection.SelectionTracker;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -42,6 +44,8 @@ public final class DocsSelectionHelper extends SelectionTracker<String> {
     // See: b/69306667.
     private SelectionTracker<String> mDelegate = new StubSelectionTracker<>();
 
+    private Set<ResetObserver> mResetObservers = new HashSet<>();
+
     @VisibleForTesting
     DocsSelectionHelper(DelegateFactory factory) {
         mFactory = factory;
@@ -52,6 +56,40 @@ public final class DocsSelectionHelper extends SelectionTracker<String> {
             mDelegate.clearSelection();
         }
         mDelegate = mFactory.create(selectionTracker);
+        for (ResetObserver observer : mResetObservers) {
+            observer.onReset();
+        }
+    }
+
+    /**
+     * Observes when the DocsSelectionHelper gets reset (this happens on every initialization and
+     * re-initialization).
+     */
+    public abstract static class ResetObserver {
+        /**
+         * Called when the DocsSelectionHelper resets.
+         */
+        public void onReset() {
+        }
+    }
+
+    /**
+     * Adds a ResetObserver.
+     * @param observer
+     */
+    public void addResetObserver(ResetObserver observer) {
+        if (mResetObservers.contains(observer)) {
+            return;
+        }
+        mResetObservers.add(observer);
+    }
+
+    /**
+     * Removes a ResetObserver.
+     * @param observer
+     */
+    public void removeResetObserver(ResetObserver observer) {
+        mResetObservers.remove(observer);
     }
 
     @Override
@@ -188,11 +226,15 @@ public final class DocsSelectionHelper extends SelectionTracker<String> {
      * Facilitates the use of ItemDetailsLookup.
      */
     public static abstract class DocDetailsLookup extends ItemDetailsLookup<String> {
-
-        // Override as public for usages in other packages.
-        @Override
-        public boolean overItemWithSelectionKey(MotionEvent e) {
-            return super.overItemWithSelectionKey(e);
+        /**
+         * Equivalent to the ItemDetailsLookup.overItemWithSelectionKey method, which has
+         * protected visibility.
+         */
+        public boolean isOverItemWithSelectionKey(MotionEvent e) {
+            ItemDetails<String> item = getItemDetails(e);
+            return (item != null)
+                    && (item.getPosition() != RecyclerView.NO_POSITION)
+                    && item.hasSelectionKey();
         }
     }
 

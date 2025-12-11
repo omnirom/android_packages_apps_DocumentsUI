@@ -19,12 +19,13 @@ package com.android.documentsui.services;
 import static android.content.ContentResolver.wrap;
 
 import static com.android.documentsui.base.SharedMinimal.DEBUG;
+import static com.android.documentsui.base.SharedMinimal.redact;
 import static com.android.documentsui.services.FileOperationService.OPERATION_MOVE;
+import static com.android.documentsui.util.Material3Config.getRes;
 
 import android.app.Notification;
 import android.app.Notification.Builder;
 import android.content.Context;
-import android.icu.text.MessageFormat;
 import android.net.Uri;
 import android.os.DeadObjectException;
 import android.os.Messenger;
@@ -45,7 +46,6 @@ import com.android.documentsui.clipping.UrisSupplier;
 
 import java.io.FileNotFoundException;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -76,64 +76,47 @@ final class MoveJob extends CopyJob {
     @Override
     Builder createProgressBuilder() {
         return super.createProgressBuilder(
-                service.getString(R.string.move_notification_title),
-                R.drawable.ic_menu_copy,
+                service.getString(getRes(R.string.move_notification_title)),
+                getRes(R.drawable.ic_menu_copy),
                 service.getString(android.R.string.cancel),
-                R.drawable.ic_cab_cancel);
+                getRes(R.drawable.ic_cab_cancel));
     }
 
     @Override
     public Notification getSetupNotification() {
-        return getSetupNotification(service.getString(R.string.move_preparing));
+        return getSetupNotification(service.getString(getRes(R.string.move_preparing)));
     }
 
     @Override
-    public Notification getProgressNotification() {
-        return getProgressNotification(R.string.copy_remaining);
-    }
-
-    @Override
-    Notification getFailureNotification() {
+    public Notification getFailureNotification() {
         return getFailureNotification(
-                R.plurals.move_error_notification_title, R.drawable.ic_menu_copy);
+                getFailureContentTitle(getRes(R.string.move_error_notification_title)),
+                getRes(R.drawable.ic_menu_copy));
     }
 
     @Override
     protected String getProgressMessage() {
-        switch (getState()) {
-            case Job.STATE_SET_UP:
-            case Job.STATE_COMPLETED:
-            case Job.STATE_CANCELED:
-                Map<String, Object> formatArgs = new HashMap<>();
-                formatArgs.put("count", mResolvedDocs.size());
-                formatArgs.put("directory",
-                        BidiFormatter.getInstance().unicodeWrap(mDstInfo.displayName));
-                if (mResolvedDocs.size() == 1) {
-                    formatArgs.put("filename", BidiFormatter.getInstance().unicodeWrap(
-                            mResolvedDocs.get(0).displayName));
-                }
-                return (new MessageFormat(
-                        service.getString(R.string.move_in_progress), Locale.getDefault()))
-                        .format(formatArgs);
-            default:
-                return "";
-        }
+        Map<String, Object> formatArgs = new HashMap<>();
+        formatArgs.put("directory", BidiFormatter.getInstance().unicodeWrap(stack.getTitle()));
+        return getProgressMessage(R.string.move_in_progress, formatArgs);
     }
 
     @Override
     public boolean setUp() {
+        if (!super.setUp()) return false;
+
         if (mSrcParentUri != null) {
             try {
                 mSrcParent = DocumentInfo.fromUri(appContext.getContentResolver(), mSrcParentUri,
                         UserId.DEFAULT_USER);
-            } catch (FileNotFoundException e) {
-                Log.e(TAG, "Failed to create srcParent.", e);
-                failureCount = mResourceUris.getItemCount();
+            } catch (Exception e) {
+                Log.e(TAG, "Cannot resolve parent URI " + redact(mSrcParentUri), e);
+                onFileFailed(mResolvedDocs);
                 return false;
             }
         }
 
-        return super.setUp();
+        return true;
     }
 
     /**
@@ -152,8 +135,8 @@ final class MoveJob extends CopyJob {
                 if (src.isDirectory()) {
                     try {
                         size += calculateFileSizesRecursively(getClient(src), src.derivedUri);
-                    } catch (RemoteException|ResourceException e) {
-                        Log.w(TAG, "Failed to obtain client for %s" + src.derivedUri + ".", e);
+                    } catch (Exception e) {
+                        Log.w(TAG, "Cannot get size of " + redact(src), e);
 
                         // Failed to calculate size, but move may still succeed.
                         return true;
@@ -209,7 +192,7 @@ final class MoveJob extends CopyJob {
         byteCopyDocument(src, dest);
 
         // Remove the source document.
-        if(!isCanceled()) {
+        if (!isCanceled()) {
             deleteDocument(src, srcParent);
         }
     }

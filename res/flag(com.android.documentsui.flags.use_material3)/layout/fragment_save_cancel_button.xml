@@ -13,17 +13,19 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<!-- The "Cancel" button is default invisible. On form factors with FEATURE_PC set, it is
-     updated to be shown always. -->
+<!-- The "Cancel" button is default invisible. On devices with the `show_picker_cancel_button`
+     config value set to true, it will appear. -->
 <com.google.android.material.button.MaterialButton
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@android:id/button2"
     style="@style/Widget.Material3.Button.TonalButton"
-    app:cornerRadius="@dimen/button_corner_radius"
+    app:cornerRadius="@dimen/button_corner_radius_m3"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/picker_saver_button_gap"
     android:layout_marginStart="4dp"
+    android:layout_marginTop="@dimen/picker_saver_button_gap"
     android:layout_marginEnd="4dp"
     android:visibility="gone"
     android:text="@android:string/cancel"/>

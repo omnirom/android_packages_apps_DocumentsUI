@@ -22,10 +22,12 @@ import static com.android.documentsui.DocumentsApplication.acquireUnstableProvid
 import static com.android.documentsui.services.FileOperationService.EXTRA_CANCEL;
 import static com.android.documentsui.services.FileOperationService.EXTRA_DIALOG_TYPE;
 import static com.android.documentsui.services.FileOperationService.EXTRA_FAILED_DOCS;
+import static com.android.documentsui.services.FileOperationService.EXTRA_FAILED_PATHS;
 import static com.android.documentsui.services.FileOperationService.EXTRA_FAILED_URIS;
 import static com.android.documentsui.services.FileOperationService.EXTRA_JOB_ID;
 import static com.android.documentsui.services.FileOperationService.EXTRA_OPERATION_TYPE;
 import static com.android.documentsui.services.FileOperationService.OPERATION_UNKNOWN;
+import static com.android.documentsui.util.Material3Config.getRes;
 
 import android.app.Notification;
 import android.app.Notification.Builder;
@@ -34,6 +36,7 @@ import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.icu.text.MessageFormat;
 import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.DeadObjectException;
@@ -45,7 +48,7 @@ import android.util.Log;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.IntDef;
-import androidx.annotation.PluralsRes;
+import androidx.annotation.NonNull;
 
 import com.android.documentsui.Metrics;
 import com.android.documentsui.OperationDialogFragment;
@@ -62,7 +65,9 @@ import java.io.FileNotFoundException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -85,7 +90,7 @@ abstract public class Job implements Runnable {
      * A job is in canceled state as long as {@link #cancel()} is called on it, even after it is
      * completed.
      */
-    static final int STATE_CANCELED = 4;
+    public static final int STATE_CANCELED = 4;
 
     static final String INTENT_TAG_WARNING = "warning";
     static final String INTENT_TAG_FAILURE = "failure";
@@ -98,22 +103,34 @@ abstract public class Job implements Runnable {
 
     final @OpType int operationType;
     final String id;
-    final DocumentStack stack;
+
+    /**
+     * Don't modify the referenced DocumentStack object in place, in order to avoid any data race
+     * condition between the job-running thread and the progress-reporting thread. If the stack
+     * needs to be modified, create a new DocumentStack object and update the following reference.
+     */
+    volatile DocumentStack stack;
 
     final UrisSupplier mResourceUris;
 
-    int failureCount = 0;
+    /**
+     * Number of errors. It is modified by the main thread running setUp(), start() and finish(),
+     * and it is read by the progress reporting thread running getJobProgress().
+     */
+    volatile int failureCount = 0;
     final ArrayList<DocumentInfo> failedDocs = new ArrayList<>();
     final ArrayList<Uri> failedUris = new ArrayList<>();
+    final ArrayList<String> failedPaths = new ArrayList<>();
 
     final Notification.Builder mProgressBuilder;
 
     final CancellationSignal mSignal = new CancellationSignal();
 
+    /** Map of URIs to cached clients. */
     private final Map<String, ContentProviderClient> mClients = new HashMap<>();
     private final Features mFeatures;
 
-    private volatile @State int mState = STATE_CREATED;
+    private @State int mState = STATE_CREATED;
 
     /**
      * A simple progressable job, much like an AsyncTask, but with support
@@ -147,19 +164,30 @@ abstract public class Job implements Runnable {
 
     @Override
     public final void run() {
-        if (isCanceled()) {
-            // Canceled before running
-            return;
+        synchronized (this) {
+            if (mState == STATE_CANCELED) {
+                // Canceled before running
+                return;
+            }
+
+            mState = STATE_STARTED;
         }
 
-        mState = STATE_STARTED;
         listener.onStart(this);
 
         try {
-            boolean result = setUp();
-            if (result && !isCanceled()) {
-                mState = STATE_SET_UP;
-                start();
+            boolean ok = setUp();
+
+            if (ok) {
+                synchronized (this) {
+                    if (mState == STATE_CANCELED) {
+                        ok = false;
+                    } else {
+                        mState = STATE_SET_UP;
+                    }
+                }
+
+                if (ok) start();
             }
         } catch (RuntimeException e) {
             // No exceptions should be thrown here, as all calls to the provider must be
@@ -167,7 +195,10 @@ abstract public class Job implements Runnable {
             Log.e(TAG, "Operation failed due to an unhandled runtime exception.", e);
             Metrics.logFileOperationErrors(operationType, failedDocs, failedUris);
         } finally {
-            mState = (mState == STATE_STARTED || mState == STATE_SET_UP) ? STATE_COMPLETED : mState;
+            synchronized (this) {
+                if (mState == STATE_STARTED || mState == STATE_SET_UP) mState = STATE_COMPLETED;
+            }
+
             finish();
             listener.onFinished(this);
 
@@ -184,11 +215,15 @@ abstract public class Job implements Runnable {
     abstract void finish();
 
     abstract void start();
-    abstract Notification getSetupNotification();
-    abstract Notification getProgressNotification();
-    abstract Notification getFailureNotification();
 
-    abstract Notification getWarningNotification();
+    public abstract Notification getSetupNotification();
+    public abstract Notification getProgressNotification();
+    public abstract Notification getFailureNotification();
+
+    /** Must be implemented if hasWarnings() can return true. */
+    Notification getWarningNotification() {
+        throw new UnsupportedOperationException();
+    }
 
     abstract JobProgress getJobProgress();
 
@@ -196,7 +231,11 @@ abstract public class Job implements Runnable {
         return Uri.parse(String.format("data,%s-%s", tag, id));
     }
 
-    ContentProviderClient getClient(Uri uri) throws RemoteException {
+    /**
+     * Gets or creates a ContentProviderClient for the given URI. The returned object is cached
+     * by this Job and will be closed by Job.cleanup().
+     */
+    @NonNull ContentProviderClient getClient(Uri uri) throws RemoteException {
         ContentProviderClient client = mClients.get(uri.getAuthority());
         if (client == null) {
             // Acquire content providers.
@@ -207,14 +246,22 @@ abstract public class Job implements Runnable {
             mClients.put(uri.getAuthority(), client);
         }
 
-        assert(client != null);
+        assert client != null;
         return client;
     }
 
-    ContentProviderClient getClient(DocumentInfo doc) throws RemoteException {
+    /**
+     * Gets or creates a ContentProviderClient for the given document. The returned object is
+     * cached by this Job and will be closed by Job.cleanup().
+     */
+    @NonNull ContentProviderClient getClient(DocumentInfo doc) throws RemoteException {
         return getClient(doc.derivedUri);
     }
 
+    /**
+     * Closes and releases the ContentProviderClient that was previously created and cached for
+     * the given URI. Does nothing if there is no such ContentProviderClient.
+     */
     void releaseClient(Uri uri) {
         ContentProviderClient client = mClients.get(uri.getAuthority());
         if (client != null) {
@@ -223,31 +270,39 @@ abstract public class Job implements Runnable {
         }
     }
 
+    /**
+     * Closes and releases the ContentProviderClient that was previously created and cached for
+     * the given document. Does nothing if there is no such ContentProviderClient.
+     */
     void releaseClient(DocumentInfo doc) {
         releaseClient(doc.derivedUri);
     }
 
+    /** Closes and releases all the ContentProviderClient objects currently cached by this Job. */
     final void cleanup() {
         for (ContentProviderClient client : mClients.values()) {
             FileUtils.closeQuietly(client);
         }
     }
 
-    final @State int getState() {
+    final synchronized @State int getState() {
         return mState;
     }
 
+    /** Requests the cancellation of this job. Can be called from any thread. */
     final void cancel() {
-        mState = STATE_CANCELED;
+        synchronized (this) {
+            mState = STATE_CANCELED;
+        }
         mSignal.cancel();
         Metrics.logFileOperationCancelled(operationType);
     }
 
-    final boolean isCanceled() {
+    final synchronized boolean isCanceled() {
         return mState == STATE_CANCELED;
     }
 
-    final boolean isFinished() {
+    final synchronized boolean isFinished() {
         return mState == STATE_CANCELED || mState == STATE_COMPLETED;
     }
 
@@ -255,14 +310,36 @@ abstract public class Job implements Runnable {
         return service.getContentResolver();
     }
 
+    @SuppressWarnings("NonAtomicVolatileUpdate")
     void onFileFailed(DocumentInfo file) {
+        // Non-atomic operation is Ok since failureCount is only modified in one thread.
+        // noinspection NonAtomicOperationOnVolatileField
         failureCount++;
         failedDocs.add(file);
     }
 
+    @SuppressWarnings("NonAtomicVolatileUpdate")
+    void onFileFailed(@NonNull Collection<? extends DocumentInfo> files) {
+        // Non-atomic operation is Ok since failureCount is only modified in one thread.
+        // noinspection NonAtomicOperationOnVolatileField
+        failureCount += files.size();
+        failedDocs.addAll(files);
+    }
+
+    @SuppressWarnings("NonAtomicVolatileUpdate")
     void onResolveFailed(Uri uri) {
+        // Non-atomic operation is Ok since failureCount is only modified in one thread.
+        // noinspection NonAtomicOperationOnVolatileField
         failureCount++;
         failedUris.add(uri);
+    }
+
+    @SuppressWarnings("NonAtomicVolatileUpdate")
+    void onPathFailed(@NonNull String path) {
+        // Non-atomic operation is Ok since failureCount is only modified in one thread.
+        // noinspection NonAtomicOperationOnVolatileField
+        failureCount++;
+        failedPaths.add(path);
     }
 
     final boolean hasFailures() {
@@ -300,23 +377,39 @@ abstract public class Job implements Runnable {
         return mProgressBuilder.build();
     }
 
-    Notification getFailureNotification(@PluralsRes int titleId, @DrawableRes int icon) {
+    Notification getFailureNotification(@NonNull String contentTitle, @DrawableRes int icon) {
         final Intent navigateIntent = buildNavigateIntent(INTENT_TAG_FAILURE);
         navigateIntent.putExtra(EXTRA_DIALOG_TYPE, OperationDialogFragment.DIALOG_TYPE_FAILURE);
         navigateIntent.putExtra(EXTRA_OPERATION_TYPE, operationType);
-        navigateIntent.putParcelableArrayListExtra(EXTRA_FAILED_DOCS, failedDocs);
-        navigateIntent.putParcelableArrayListExtra(EXTRA_FAILED_URIS, failedUris);
 
-        final Notification.Builder errorBuilder = createNotificationBuilder()
-                .setContentTitle(service.getResources().getQuantityString(titleId,
-                        failureCount, failureCount))
-                .setContentText(service.getString(R.string.notification_touch_for_details))
-                .setContentIntent(PendingIntent.getActivity(appContext, 0, navigateIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT
-                        | PendingIntent.FLAG_MUTABLE))
-                .setCategory(Notification.CATEGORY_ERROR)
-                .setSmallIcon(icon)
-                .setAutoCancel(true);
+        // Limit the size of the lists getting passed with the failure notification.
+        final int maxListSize = 100;
+        navigateIntent.putParcelableArrayListExtra(EXTRA_FAILED_DOCS,
+                failedDocs.size() <= maxListSize ? failedDocs
+                        : new ArrayList<>(failedDocs.subList(0, maxListSize)));
+        navigateIntent.putParcelableArrayListExtra(EXTRA_FAILED_URIS,
+                failedUris.size() <= maxListSize ? failedUris
+                        : new ArrayList<>(failedUris.subList(0, maxListSize)));
+        navigateIntent.putStringArrayListExtra(EXTRA_FAILED_PATHS,
+                failedPaths.size() <= maxListSize ? failedPaths
+                        : new ArrayList<>(failedPaths.subList(0, maxListSize)));
+
+        final Notification.Builder errorBuilder =
+                createNotificationBuilder()
+                        .setContentTitle(contentTitle)
+                        .setContentText(
+                                service.getString(getRes(R.string.notification_touch_for_details)))
+                        .setContentIntent(
+                                PendingIntent.getActivity(
+                                        appContext,
+                                        0,
+                                        navigateIntent,
+                                        PendingIntent.FLAG_UPDATE_CURRENT
+                                                | PendingIntent.FLAG_ONE_SHOT
+                                                | PendingIntent.FLAG_MUTABLE))
+                        .setCategory(Notification.CATEGORY_ERROR)
+                        .setSmallIcon(icon)
+                        .setAutoCancel(true);
 
         return errorBuilder.build();
     }
@@ -349,6 +442,29 @@ abstract public class Job implements Runnable {
                         | PendingIntent.FLAG_MUTABLE));
 
         return progressBuilder;
+    }
+
+    /**
+     * Gets a formatted failure message from a string resource.
+     *
+     * @param stringId   The resource ID of the string to format.
+     * @param formatArgs The map of arguments to use for formatting.
+     * @return The formatted failure message.
+     */
+    String getFailureContentTitle(int stringId, @NonNull Map<String, Object> formatArgs) {
+        formatArgs.put("count", failureCount);
+        return new MessageFormat(service.getString(getRes(stringId)), Locale.getDefault()).format(
+                formatArgs);
+    }
+
+    /**
+     * Gets a formatted failure message from a string resource.
+     *
+     * @param stringId The resource ID of the string to format.
+     * @return The formatted failure message
+     */
+    final String getFailureContentTitle(int stringId) {
+        return getFailureContentTitle(stringId, new HashMap<>());
     }
 
     Notification.Builder createNotificationBuilder() {
@@ -390,7 +506,7 @@ abstract public class Job implements Runnable {
     /**
      * Listener interface employed by the service that owns us as well as tests.
      */
-    interface Listener {
+    public interface Listener {
         void onStart(Job job);
         void onFinished(Job job);
     }

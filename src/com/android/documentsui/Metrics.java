@@ -19,6 +19,7 @@ package com.android.documentsui;
 import static android.content.ContentResolver.wrap;
 
 import static com.android.documentsui.DocumentsApplication.acquireUnstableProviderOrThrow;
+import static com.android.documentsui.base.SharedMinimal.redact;
 
 import android.content.ContentProviderClient;
 import android.content.Context;
@@ -213,6 +214,9 @@ public final class Metrics {
                 break;
             case FileOperationService.OPERATION_MOVE:
                 opCode = MetricConsts.FILEOP_MOVE_ERROR;
+                break;
+            case FileOperationService.OPERATION_UNPACK:
+                opCode = MetricConsts.FILEOP_UNPACK_ERROR;
                 break;
         }
         if (counts.systemProvider > 0) {
@@ -433,7 +437,10 @@ public final class Metrics {
     }
 
     /** @see #sanitizeRoot(Uri) */
-    public static @MetricConsts.Root int sanitizeRoot(RootInfo root) {
+    public static @MetricConsts.Root int sanitizeRoot(@Nullable RootInfo root) {
+        if (root == null) {
+            return MetricConsts.ROOT_UNKNOWN;
+        }
         if (root.isRecents()) {
             // Recents root is special and only identifiable via this method call. Other roots are
             // identified by URI.
@@ -640,7 +647,7 @@ public final class Metrics {
         try {
             return DocumentsContract.getRootId(uri);
         } catch (IllegalArgumentException iae) {
-            Log.w(TAG, "Invalid root Uri " + uri.toSafeString());
+            Log.w(TAG, "Invalid root Uri " + redact(uri));
         }
         return null;
     }

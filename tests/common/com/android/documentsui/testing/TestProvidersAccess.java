@@ -15,9 +15,12 @@
  */
 package com.android.documentsui.testing;
 
+import android.content.ContentResolver;
 import android.os.Process;
 import android.os.UserHandle;
 import android.provider.DocumentsContract.Root;
+
+import androidx.annotation.NonNull;
 
 import com.android.documentsui.InspectorProvider;
 import com.android.documentsui.base.Providers;
@@ -44,6 +47,7 @@ public class TestProvidersAccess implements ProvidersAccess {
     public static final RootInfo HAMMY;
     public static final RootInfo PICKLES;
     public static final RootInfo RECENTS;
+    public static final RootInfo TRASH_ROOT;
     public static final RootInfo INSPECTOR;
     public static final RootInfo IMAGE;
     public static final RootInfo AUDIO;
@@ -67,6 +71,8 @@ public class TestProvidersAccess implements ProvidersAccess {
         DOWNLOADS.flags = Root.FLAG_LOCAL_ONLY
                 | Root.FLAG_SUPPORTS_CREATE
                 | Root.FLAG_SUPPORTS_RECENTS;
+        // This DocumentsProvider supports limiting the results returned
+        DOWNLOADS.queryArgs = ContentResolver.QUERY_ARG_LIMIT;
 
         HOME = new RootInfo();
         HOME.userId = userId;
@@ -104,6 +110,18 @@ public class TestProvidersAccess implements ProvidersAccess {
         };
         RECENTS.userId = userId;
         RECENTS.title = "Recents";
+
+        TRASH_ROOT = new RootInfo() {
+            {
+                // Special root for trash
+                rootId = Providers.TRASH_ROOT_ID;
+                derivedType = RootInfo.TYPE_TRASH;
+                flags = Root.FLAG_LOCAL_ONLY;
+                availableBytes = -1;
+            }
+        };
+        RECENTS.userId = userId;
+        RECENTS.title = "Trash";
 
         INSPECTOR = new RootInfo();
         INSPECTOR.userId = userId;
@@ -360,6 +378,11 @@ public class TestProvidersAccess implements ProvidersAccess {
     @Override
     public RootInfo getRecentsRoot(UserId userId) {
         return RECENTS;
+    }
+
+    @Override
+    public RootInfo getTrashRoot(@NonNull UserId userId) {
+        return TRASH_ROOT;
     }
 
     @Override

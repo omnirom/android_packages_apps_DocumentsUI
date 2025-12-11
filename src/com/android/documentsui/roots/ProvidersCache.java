@@ -20,8 +20,11 @@ import static android.provider.DocumentsContract.QUERY_ARG_MIME_TYPES;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
+import static com.android.documentsui.base.Providers.TRASH_ROOT_ID;
 import static com.android.documentsui.base.SharedMinimal.DEBUG;
 import static com.android.documentsui.base.SharedMinimal.VERBOSE;
+import static com.android.documentsui.util.Material3Config.getRes;
+import static com.android.documentsui.util.FlagUtils.isTrashFlowEnabled;
 
 import android.content.BroadcastReceiver.PendingResult;
 import android.content.ContentProviderClient;
@@ -46,6 +49,7 @@ import android.provider.DocumentsContract.Root;
 import android.util.Log;
 
 import androidx.annotation.GuardedBy;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -105,6 +109,9 @@ public class ProvidersCache implements ProvidersAccess, LookupApplicationName {
     @GuardedBy("mRecentsRoots")
     private final Map<UserId, RootInfo> mRecentsRoots = new HashMap<>();
 
+    @GuardedBy("mTrashRoots")
+    private final Map<UserId, RootInfo> mTrashRoots = new HashMap<>();
+
     private final Object mLock = new Object();
     private final CountDownLatch mFirstLoad = new CountDownLatch(1);
 
@@ -130,20 +137,55 @@ public class ProvidersCache implements ProvidersAccess, LookupApplicationName {
      * Generates recent root for the provided user id
      */
     private RootInfo generateRecentsRoot(UserId rootUserId) {
-        return new RootInfo() {{
-            // Special root for recents
-            userId = rootUserId;
-            derivedIcon = R.drawable.ic_root_recent;
-            derivedType = RootInfo.TYPE_RECENTS;
-            flags = Root.FLAG_LOCAL_ONLY | Root.FLAG_SUPPORTS_IS_CHILD | Root.FLAG_SUPPORTS_SEARCH;
-            queryArgs = QUERY_ARG_MIME_TYPES;
-            title = mContext.getString(R.string.root_recent);
-            availableBytes = -1;
-        }};
+        return new RootInfo() {
+            {
+                // Special root for recents
+                userId = rootUserId;
+                derivedIcon = getRes(R.drawable.ic_root_recent);
+                derivedType = RootInfo.TYPE_RECENTS;
+                flags =
+                        Root.FLAG_LOCAL_ONLY
+                                | Root.FLAG_SUPPORTS_IS_CHILD
+                                | Root.FLAG_SUPPORTS_SEARCH;
+                queryArgs = QUERY_ARG_MIME_TYPES;
+                title = mContext.getString(getRes(R.string.root_recent));
+                availableBytes = -1;
+            }
+        };
+    }
+
+    /**
+     * Generates {@link RootInfo} for the trash root for a given user.
+     *
+     * @param rootUserId The {@link UserId} for which to generate the trash root info.
+     * @return A {@link RootInfo} object representing the trash root.
+     */
+    private @Nullable RootInfo generateTrashRoot(UserId rootUserId) {
+        if (!isTrashFlowEnabled()) {
+            return null;
+        }
+        return new RootInfo() {
+            {
+                // Special root for trash
+                userId = rootUserId;
+                derivedIcon = getRes(R.drawable.ic_menu_delete);
+                derivedType = RootInfo.TYPE_TRASH;
+                rootId = TRASH_ROOT_ID;
+                flags = Root.FLAG_LOCAL_ONLY | Root.FLAG_SUPPORTS_IS_CHILD;
+                title = mContext.getString(getRes(R.string.root_trash));
+                availableBytes = -1;
+            }
+        };
     }
 
     private RootInfo createOrGetRecentsRoot(UserId userId) {
         return createOrGetByUserId(mRecentsRoots, userId, user -> generateRecentsRoot(user));
+    }
+
+    private @Nullable RootInfo createOrGetTrashRoot(UserId userId) {
+        synchronized (mTrashRoots) {
+            return createOrGetByUserId(mTrashRoots, userId, this::generateTrashRoot);
+        }
     }
 
     private RootsChangedObserver createOrGetRootsChangedObserver(UserId userId) {
@@ -199,7 +241,7 @@ public class ProvidersCache implements ProvidersAccess, LookupApplicationName {
         // NOTE: This method is called when the UI language changes.
         // For that reason we update our RecentsRoot to reflect
         // the current language.
-        final String title = mContext.getString(R.string.root_recent);
+        final String title = mContext.getString(getRes(R.string.root_recent));
         List<UserId> userIds = new ArrayList<>(getUserIds());
         for (UserId userId : userIds) {
             RootInfo recentRoot = createOrGetRecentsRoot(userId);
@@ -207,7 +249,7 @@ public class ProvidersCache implements ProvidersAccess, LookupApplicationName {
             // Nothing else about the root should ever change.
             assert (recentRoot.authority == null);
             assert (recentRoot.rootId == null);
-            assert (recentRoot.derivedIcon == R.drawable.ic_root_recent);
+            assert (recentRoot.derivedIcon == getRes(R.drawable.ic_root_recent));
             assert (recentRoot.derivedType == RootInfo.TYPE_RECENTS);
             assert (recentRoot.flags == (Root.FLAG_LOCAL_ONLY | Root.FLAG_SUPPORTS_IS_CHILD));
             assert (recentRoot.availableBytes == -1);
@@ -435,6 +477,11 @@ public class ProvidersCache implements ProvidersAccess, LookupApplicationName {
         return createOrGetRecentsRoot(userId);
     }
 
+    @Override
+    public @Nullable RootInfo getTrashRoot(@NonNull UserId userId) {
+        return createOrGetTrashRoot(userId);
+    }
+
     public boolean isRecentsRoot(RootInfo root) {
         return mRecentsRoots.containsValue(root);
     }
@@ -544,6 +591,13 @@ public class ProvidersCache implements ProvidersAccess, LookupApplicationName {
                 final RootInfo recents = createOrGetRecentsRoot(userId);
                 synchronized (mLock) {
                     mLocalRoots.put(new UserAuthority(recents.userId, recents.authority), recents);
+                }
+                if (isTrashFlowEnabled()) {
+                    final RootInfo trashRoot = createOrGetTrashRoot(userId);
+                    synchronized (mLock) {
+                        mLocalRoots.put(new UserAuthority(trashRoot.userId, trashRoot.authority),
+                                trashRoot);
+                    }
                 }
             }
 

@@ -141,6 +141,11 @@ public interface ActionHandler {
      */
     void springOpenDirectory(DocumentInfo doc);
 
+    /**
+     * Replaces the existing stack with the given stack.
+     */
+    void jumpToDirectory(DocumentStack stack);
+
     void showChooserForDoc(DocumentInfo doc);
 
     void openRootDocument(@Nullable DocumentInfo rootDoc);
@@ -162,6 +167,16 @@ public interface ActionHandler {
      * Delete the selected document(s)
      */
     void deleteSelectedDocuments(List<DocumentInfo> docs, DocumentInfo srcParent);
+
+    /**
+     * Trash the selected document(s)
+     */
+    void trashSelectedDocuments(List<DocumentInfo> docs);
+
+    /**
+     * Restore the selected document(s)
+     */
+    void restoreSelectedDocumentsFromTrash(List<DocumentInfo> docs);
 
     void shareSelectedDocuments();
 

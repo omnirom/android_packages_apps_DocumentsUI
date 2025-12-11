@@ -16,7 +16,9 @@
 
 package com.android.documentsui.queries;
 
+import static com.android.documentsui.util.FlagUtils.isSearchV2Enabled;
 import static com.android.documentsui.util.FlagUtils.isUseMaterial3FlagEnabled;
+import static com.android.documentsui.util.Material3Config.getRes;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
@@ -63,11 +65,6 @@ public class SearchChipViewManager {
     private static final int CHIP_MOVE_ANIMATION_DURATION = 250;
     // Defined large file as the size is larger than 10 MB.
     private static final long LARGE_FILE_SIZE_BYTES = 10000000L;
-    // Defined a week ago as now in millis.
-    private static final long A_WEEK_AGO_MILLIS =
-            LocalDate.now().minusDays(7).atStartOfDay(ZoneId.systemDefault())
-                    .toInstant()
-                    .toEpochMilli();
 
     private static final int TYPE_IMAGES = MetricConsts.TYPE_CHIP_IMAGES;
     private static final int TYPE_DOCUMENTS = MetricConsts.TYPE_CHIP_DOCS;
@@ -79,11 +76,11 @@ public class SearchChipViewManager {
     private static final ChipComparator CHIP_COMPARATOR = new ChipComparator();
 
     // we will get the icon drawable with the first mimeType
-    private static final String[] IMAGES_MIMETYPES = new String[]{"image/*"};
-    private static final String[] VIDEOS_MIMETYPES = new String[]{"video/*"};
-    private static final String[] AUDIO_MIMETYPES =
+    public static final String[] IMAGES_MIMETYPES = new String[]{"image/*"};
+    public static final String[] VIDEOS_MIMETYPES = new String[]{"video/*"};
+    public static final String[] AUDIO_MIMETYPES =
             new String[]{"audio/*", "application/ogg", "application/x-flac"};
-    private static final String[] DOCUMENTS_MIMETYPES = MimeTypes.getDocumentMimeTypeArray();
+    public static final String[] DOCUMENTS_MIMETYPES = MimeTypes.getDocumentMimeTypeArray();
     private static final String[] EMPTY_MIMETYPES = new String[]{""};
 
     private static final Map<Integer, SearchChipData> sMimeTypesChipItems = new HashMap<>();
@@ -94,30 +91,35 @@ public class SearchChipViewManager {
     private SearchChipViewManagerListener mListener;
     private String[] mCurrentUpdateMimeTypes;
     private boolean mIsFirstUpdateChipsReady;
+    private final List<SearchChipData> mMimeDataStack = new ArrayList<>(4);
 
     @VisibleForTesting
     Set<SearchChipData> mCheckedChipItems = new HashSet<>();
 
     static {
-        sMimeTypesChipItems.put(TYPE_IMAGES,
+        sMimeTypesChipItems.put(
+                TYPE_IMAGES,
                 new SearchChipData(TYPE_IMAGES, R.string.chip_title_images, IMAGES_MIMETYPES));
         if (VersionUtils.isAtLeastR()) {
-            sMimeTypesChipItems.put(TYPE_DOCUMENTS,
-                    new SearchChipData(TYPE_DOCUMENTS, R.string.chip_title_documents,
-                            DOCUMENTS_MIMETYPES));
+            sMimeTypesChipItems.put(
+                    TYPE_DOCUMENTS,
+                    new SearchChipData(
+                            TYPE_DOCUMENTS, R.string.chip_title_documents, DOCUMENTS_MIMETYPES));
         }
-        sMimeTypesChipItems.put(TYPE_AUDIO,
+        sMimeTypesChipItems.put(
+                TYPE_AUDIO,
                 new SearchChipData(TYPE_AUDIO, R.string.chip_title_audio, AUDIO_MIMETYPES));
-        sMimeTypesChipItems.put(TYPE_VIDEOS,
+        sMimeTypesChipItems.put(
+                TYPE_VIDEOS,
                 new SearchChipData(TYPE_VIDEOS, R.string.chip_title_videos, VIDEOS_MIMETYPES));
-        sDefaultChipItems.put(TYPE_LARGE_FILES,
-                new SearchChipData(TYPE_LARGE_FILES,
-                        R.string.chip_title_large_files,
-                        EMPTY_MIMETYPES));
-        sDefaultChipItems.put(TYPE_FROM_THIS_WEEK,
-                new SearchChipData(TYPE_FROM_THIS_WEEK,
-                        R.string.chip_title_from_this_week,
-                        EMPTY_MIMETYPES));
+        sDefaultChipItems.put(
+                TYPE_LARGE_FILES,
+                new SearchChipData(
+                        TYPE_LARGE_FILES, R.string.chip_title_large_files, EMPTY_MIMETYPES));
+        sDefaultChipItems.put(
+                TYPE_FROM_THIS_WEEK,
+                new SearchChipData(
+                        TYPE_FROM_THIS_WEEK, R.string.chip_title_from_this_week, EMPTY_MIMETYPES));
     }
 
     public SearchChipViewManager(@NonNull ViewGroup chipGroup) {
@@ -192,12 +194,15 @@ public class SearchChipViewManager {
                 queryArgs.putLong(DocumentsContract.QUERY_ARG_FILE_SIZE_OVER,
                         LARGE_FILE_SIZE_BYTES);
             } else if (data.getChipType() == MetricConsts.TYPE_CHIP_FROM_THIS_WEEK) {
+                // Calculate a week ago from now.
+                long aWeekAgoFromNowInMillis =
+                        LocalDate.now().minusDays(7).atStartOfDay(ZoneId.systemDefault())
+                                .toInstant()
+                                .toEpochMilli();
                 queryArgs.putLong(DocumentsContract.QUERY_ARG_LAST_MODIFIED_AFTER,
-                        A_WEEK_AGO_MILLIS);
+                        aWeekAgoFromNowInMillis);
             } else {
-                for (String mimeType : data.getMimeTypes()) {
-                    checkedMimeTypes.add(mimeType);
-                }
+                Collections.addAll(checkedMimeTypes, data.getMimeTypes());
             }
         }
 
@@ -282,7 +287,7 @@ public class SearchChipViewManager {
     }
 
     private void addChipToGroup(ViewGroup group, SearchChipData data, LayoutInflater inflater) {
-        Chip chip = (Chip) inflater.inflate(R.layout.search_chip_item, mChipGroup, false);
+        Chip chip = (Chip) inflater.inflate(getRes(R.layout.search_chip_item), mChipGroup, false);
         bindChip(chip, data);
         group.addView(chip);
     }
@@ -334,6 +339,15 @@ public class SearchChipViewManager {
         mListener = listener;
     }
 
+    /**
+     * Returns the ID of the leading checked chip or null, if no chips are checked.
+     */
+    public Integer getLeadingMimeChipType() {
+        int stackSize = mMimeDataStack.size();
+        return !isSearchV2Enabled() || stackSize == 0 ? null
+                : mMimeDataStack.get(stackSize - 1).getChipType();
+    }
+
     private static void setChipChecked(Chip chip, boolean isChecked) {
         chip.setChecked(isChecked);
         chip.setChipIconVisible(!isChecked);
@@ -351,6 +365,21 @@ public class SearchChipViewManager {
         }
     }
 
+    /**
+     * Checks if the given integer corresponds to constants representing one of the four
+     * generic file types: audio, docs, images or videos. MetricConst collects all sort of
+     * constants, so this method is added as a check that we are handing one of MIME type
+     * chips and not, for example, file size chip.
+     * @param chipType An integer that may or may not be a type constant.
+     * @return Whether the given integer corresponds to one of the generic file types.
+     */
+    private boolean isMimeChip(@MetricConsts.SearchType int chipType) {
+        return chipType == MetricConsts.TYPE_CHIP_AUDIOS
+                || chipType == MetricConsts.TYPE_CHIP_DOCS
+                || chipType == MetricConsts.TYPE_CHIP_IMAGES
+                || chipType == MetricConsts.TYPE_CHIP_VIDEOS;
+    }
+
     private void onChipClick(View v) {
         final Chip chip = (Chip) v;
 
@@ -361,10 +390,15 @@ public class SearchChipViewManager {
         chip.getBackground().setVisible(false /* visible */, false /* restart */);
 
         final SearchChipData item = (SearchChipData) chip.getTag();
+        int chipType = item.getChipType();
         if (chip.isChecked()) {
-            mCheckedChipItems.add(item);
+            if (mCheckedChipItems.add(item) && isMimeChip(chipType)) {
+                mMimeDataStack.add(item);
+            }
         } else {
-            mCheckedChipItems.remove(item);
+            if (mCheckedChipItems.remove(item) && isMimeChip(chipType)) {
+                mMimeDataStack.remove(item);
+            }
         }
 
         setChipChecked(chip, chip.isChecked());
@@ -382,14 +416,17 @@ public class SearchChipViewManager {
     private void onChipFocusChange(View v, boolean hasFocus) {
         Chip chip = (Chip) v;
         if (hasFocus) {
-            final int focusRingWidth = mChipGroup
-                    .getResources()
-                    .getDimensionPixelSize(R.dimen.focus_ring_width);
+            final int focusRingWidth =
+                    mChipGroup
+                            .getResources()
+                            .getDimensionPixelSize(getRes(R.dimen.focus_ring_width));
             chip.setChipStrokeWidth(focusRingWidth);
         } else {
-            final int strokeWidth = mChipGroup
-                    .getResources()
-                    .getDimensionPixelSize(R.dimen.search_chip_inactive_stroke_width);
+            final int strokeWidth =
+                    mChipGroup
+                            .getResources()
+                            .getDimensionPixelSize(
+                                    getRes(R.dimen.search_chip_inactive_stroke_width));
             chip.setChipStrokeWidth(strokeWidth);
         }
     }
@@ -415,22 +452,27 @@ public class SearchChipViewManager {
         final Context context = mChipGroup.getContext();
         int chipType = chipData.getChipType();
         if (chipType == TYPE_LARGE_FILES) {
-            return context.getDrawable(R.drawable.ic_chip_large_files);
+            return context.getDrawable(getRes(R.drawable.ic_chip_large_files));
         }
         if (chipType == TYPE_FROM_THIS_WEEK) {
-            return context.getDrawable(R.drawable.ic_chip_from_this_week);
+            return context.getDrawable(getRes(R.drawable.ic_chip_from_this_week));
         }
 
         // When use_material3 flag is ON, we don't want to use MIME type icons for
         // image/audio/video/document from the system.
         if (isUseMaterial3FlagEnabled()) {
-            return switch (chipType) {
-                case TYPE_IMAGES -> context.getDrawable(R.drawable.ic_chip_image);
-                case TYPE_AUDIO -> context.getDrawable(R.drawable.ic_chip_audio);
-                case TYPE_VIDEOS -> context.getDrawable(R.drawable.ic_chip_video);
-                case TYPE_DOCUMENTS -> context.getDrawable(R.drawable.ic_chip_document);
-                default -> null;
-            };
+            switch (chipType) {
+                case TYPE_IMAGES:
+                    return context.getDrawable(getRes(R.drawable.ic_chip_image));
+                case TYPE_AUDIO:
+                    return context.getDrawable(getRes(R.drawable.ic_chip_audio));
+                case TYPE_VIDEOS:
+                    return context.getDrawable(getRes(R.drawable.ic_chip_video));
+                case TYPE_DOCUMENTS:
+                    return context.getDrawable(getRes(R.drawable.ic_chip_document));
+                default:
+                    return null;
+            }
         }
 
         if (chipType == TYPE_DOCUMENTS) {
@@ -447,6 +489,12 @@ public class SearchChipViewManager {
      * @param hasAnim     if true, play move animation. Otherwise, not.
      */
     private void reorderCheckedChips(@Nullable Chip clickedChip, boolean hasAnim) {
+        boolean supportChipMove = mChipGroup.getResources().getBoolean(
+                getRes(R.bool.move_search_chip_when_selected));
+        if (!supportChipMove) {
+            return;
+        }
+
         final ArrayList<Chip> chipList = new ArrayList<>();
         final int count = mChipGroup.getChildCount();
 
@@ -475,14 +523,14 @@ public class SearchChipViewManager {
                         ? ((ChipGroup) mChipGroup).getChipSpacingHorizontal()
                         : mChipGroup
                                 .getResources()
-                                .getDimensionPixelSize(R.dimen.search_chip_spacing);
+                                .getDimensionPixelSize(getRes(R.dimen.search_chip_spacing));
         final boolean isRtl = mChipGroup.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
         final float chipGroupPaddingStart =
                 isUseMaterial3FlagEnabled()
                         ? mChipGroup.getPaddingStart()
                         : mChipGroup
                                 .getResources()
-                                .getDimensionPixelSize(R.dimen.search_chip_half_spacing);
+                                .getDimensionPixelSize(getRes(R.dimen.search_chip_half_spacing));
         float lastX = isRtl ? mChipGroup.getWidth() - chipGroupPaddingStart : chipGroupPaddingStart;
 
         // remove all chips except current clicked chip to avoid losing

@@ -15,10 +15,12 @@
  */
 package com.android.documentsui.loaders
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.Parcel
 import android.provider.DocumentsContract
 import com.android.documentsui.DirectoryResult
+import com.android.documentsui.Model
 import com.android.documentsui.TestActivity
 import com.android.documentsui.TestConfigStore
 import com.android.documentsui.base.DocumentInfo
@@ -26,6 +28,7 @@ import com.android.documentsui.base.UserId
 import com.android.documentsui.sorting.SortModel
 import com.android.documentsui.testing.ActivityManagers
 import com.android.documentsui.testing.TestEnv
+import com.android.documentsui.testing.TestFeatures
 import com.android.documentsui.testing.TestModel
 import com.android.documentsui.testing.UserManagers
 import java.time.Duration
@@ -44,36 +47,70 @@ fun getFileCount(result: DirectoryResult?) = result?.cursor?.count ?: -1
  * returned files matches the expectations.
  */
 data class LoaderTestParams(
-    // A query, matched against file names. May be empty.
+    // Number of fake files to populate the mock (queried) DocumentsProvider with.
+    val fakeFileCount: Int,
+    // A query, matched against the fake file names. May be empty.
     val query: String,
     // The delta from now that indicates maximum age of matched files.
     val lastModifiedDelta: Duration?,
-    // The extra arguments typically supplied by search view manager.
+    // The maximum number of files to ask each Root for (QueryOptions.ALL_RESULTS means no limit).
+    val maxResultsPerRoot: Int,
+    // The extra arguments typically supplied by SearchViewManager.
     val otherArgs: Bundle,
     // The number of files that are expected, for the above parameters, to be found by a loader.
     val expectedCount: Int,
-)
+) {
+    override fun toString(): String {
+        var base = "query '$query', maxResultsPerRoot: '$maxResultsPerRoot'"
+        if (lastModifiedDelta != null) {
+            base = "$base, modified in the last $lastModifiedDelta"
+        }
+        if (!otherArgs.isEmpty) {
+            base = "$base, and $otherArgs"
+        }
+        return "$base, expecting $expectedCount matches"
+    }
+}
 
 /**
- * Common base class for search and folder loaders.
+ * Helper function that given `DirectoryResult` returns a list of `DocumentInfo` objects
+ * representing then.
  */
+@SuppressLint("VisibleForTests")
+fun getDocuments(result: DirectoryResult?): List<DocumentInfo> {
+    if (result == null) {
+        return listOf()
+    }
+    val model = Model(TestFeatures())
+    model.update(result)
+    val documents = mutableListOf<DocumentInfo>()
+    for (modelId in result.modelIds) {
+        val documentInfo = model.getDocument(modelId)
+        if (documentInfo != null) {
+            documents.add(documentInfo)
+        }
+    }
+    return documents
+}
+
+/** Common base class for search and folder loaders. */
 open class BaseLoaderTest {
-    lateinit var mEnv: TestEnv
-    lateinit var mActivity: TestActivity
-    lateinit var mTestConfigStore: TestConfigStore
+    lateinit var environment: TestEnv
+    lateinit var activity: TestActivity
+    lateinit var testConfigStore: TestConfigStore
 
     @Before
-    open fun setUp() {
-        mEnv = TestEnv.create()
-        mTestConfigStore = TestConfigStore()
-        mEnv.state.configStore = mTestConfigStore
-        mEnv.state.showHiddenFiles = false
+    fun setUp() {
+        environment = TestEnv.create()
+        testConfigStore = TestConfigStore()
+        environment.state.configStore = testConfigStore
+        environment.state.showHiddenFiles = false
         val parcel = Parcel.obtain()
-        mEnv.state.sortModel = SortModel.CREATOR.createFromParcel(parcel)
+        environment.state.sortModel = SortModel.CREATOR.createFromParcel(parcel)
 
-        mActivity = TestActivity.create(mEnv)
-        mActivity.activityManager = ActivityManagers.create(false)
-        mActivity.userManager = UserManagers.create()
+        activity = TestActivity.create(environment)
+        activity.activityManager = ActivityManagers.create(false)
+        activity.userManager = UserManagers.create()
     }
 
     /**
@@ -86,10 +123,10 @@ open class BaseLoaderTest {
         val flags = (DocumentsContract.Document.FLAG_SUPPORTS_WRITE
                 or DocumentsContract.Document.FLAG_SUPPORTS_DELETE
                 or DocumentsContract.Document.FLAG_SUPPORTS_RENAME)
-        return Array<DocumentInfo>(count) { i ->
+        return Array(count) { i ->
             val id = String.format(Locale.US, "%05d", i)
             val name = "sample-$id.${extensionList[i % extensionList.size]}"
-            mEnv.model.createDocumentForUser(
+            environment.model.createDocumentForUser(
                 name,
                 TestModel.guessMimeType(name),
                 flags,

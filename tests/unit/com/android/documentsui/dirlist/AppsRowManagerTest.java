@@ -16,7 +16,11 @@
 
 package com.android.documentsui.dirlist;
 
+import static com.android.documentsui.util.FlagUtils.isUseMaterial3FlagEnabled;
+import static com.android.documentsui.util.Material3Config.getRes;
+
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.TruthJUnit.assume;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -30,7 +34,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import androidx.test.InstrumentationRegistry;
+import androidx.test.filters.SmallTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.documentsui.ActionHandler;
 import com.android.documentsui.BaseActivity;
@@ -61,6 +66,7 @@ import org.junit.runners.Parameterized.Parameters;
 import java.util.ArrayList;
 import java.util.List;
 
+@SmallTest
 @RunWith(Parameterized.class)
 public class AppsRowManagerTest {
 
@@ -90,6 +96,18 @@ public class AppsRowManagerTest {
     }
 
     @Before
+    public void checkConfigEnabled() {
+        if (isUseMaterial3FlagEnabled()) {
+            // The AppsRowManager is only available on devices that have the `show_apps_row`
+            // config enabled.
+            assume().that(
+                            InstrumentationRegistry.getInstrumentation()
+                                    .getTargetContext()
+                                    .getResources().getBoolean(R.bool.show_apps_row)).isTrue();
+        }
+    }
+
+    @Before
     public void setUp() {
         mActionHandler = new TestActionHandler();
         mTestUserIdManager = new TestUserIdManager();
@@ -97,10 +115,12 @@ public class AppsRowManagerTest {
         mAppsRowManager = getAppsRowManager();
 
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        context.setTheme(getRes(R.style.DocumentsTheme));
+        context.getTheme().applyStyle(getRes(R.style.DocumentsDefaultTheme), false);
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         mState = new State();
         mActivity = mock(BaseActivity.class);
-        mAppsRow = layoutInflater.inflate(R.layout.apps_row, null);
+        mAppsRow = layoutInflater.inflate(getRes(R.layout.apps_row), null);
         mAppsGroup = mAppsRow.findViewById(R.id.apps_row);
 
         mState.configStore = mTestConfigStore;
@@ -124,13 +144,13 @@ public class AppsRowManagerTest {
                     Lists.newArrayList(UserId.DEFAULT_USER, TestProvidersAccess.OtherUser.USER_ID,
                             TestProvidersAccess.AnotherUser.USER_ID);
             return new AppsRowManager(mActionHandler, mMaybeShowBadge, mTestUserManagerState,
-                    mTestConfigStore);
+                    mTestConfigStore, /*shouldShowByDefault=*/true);
         }
         mTestUserIdManager = new TestUserIdManager();
         mTestUserIdManager.userIds =
                 Lists.newArrayList(UserId.DEFAULT_USER, TestProvidersAccess.OtherUser.USER_ID);
         return new AppsRowManager(mActionHandler, mMaybeShowBadge, mTestUserIdManager,
-                mTestConfigStore);
+                mTestConfigStore, /*shouldShowByDefault=*/true);
     }
 
     @Test
@@ -346,4 +366,3 @@ public class AppsRowManagerTest {
         assertEquals(View.GONE, mAppsRow.getVisibility());
     }
 }
-

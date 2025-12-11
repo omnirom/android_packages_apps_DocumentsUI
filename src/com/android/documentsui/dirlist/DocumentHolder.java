@@ -19,6 +19,7 @@ package com.android.documentsui.dirlist;
 import static com.android.documentsui.DevicePolicyResources.Strings.PREVIEW_WORK_FILE_ACCESSIBILITY;
 import static com.android.documentsui.DevicePolicyResources.Strings.UNDEFINED;
 import static com.android.documentsui.util.FlagUtils.isUseMaterial3FlagEnabled;
+import static com.android.documentsui.util.Material3Config.getRes;
 
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
@@ -35,6 +36,7 @@ import android.widget.ImageView;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
+import androidx.recyclerview.selection.ItemDetailsLookup.ItemDetails;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.documentsui.ConfigStore;
@@ -165,8 +167,11 @@ public abstract class DocumentHolder
         return false;
     }
 
-    public boolean inSelectRegion(MotionEvent event) {
-        return false;
+    /**
+     * Passes on an ItemDetails.classifySelectionHotspot call.
+     */
+    public int classifySelectionHotspot(MotionEvent event) {
+        return ItemDetails.SELECTION_HOTSPOT_OUTSIDE;
     }
 
     public boolean inPreviewIconRegion(MotionEvent event) {
@@ -214,9 +219,12 @@ public abstract class DocumentHolder
         if (SdkLevel.isAtLeastT()) {
             return getUpdatablePreviewIconContentDescription(isNonPersonalProfile, fileName);
         } else {
-            return itemView.getResources().getString(
-                    isNonPersonalProfile ? R.string.preview_work_file : R.string.preview_file,
-                    fileName);
+            return itemView.getResources()
+                    .getString(
+                            isNonPersonalProfile
+                                    ? getRes(R.string.preview_work_file)
+                                    : getRes(R.string.preview_file),
+                            fileName);
         }
     }
 
@@ -227,7 +235,7 @@ public abstract class DocumentHolder
                 DevicePolicyManager.class);
         String updatableStringId = isWorkProfile ? PREVIEW_WORK_FILE_ACCESSIBILITY : UNDEFINED;
         int defaultStringId =
-                isWorkProfile ? R.string.preview_work_file : R.string.preview_file;
+                isWorkProfile ? getRes(R.string.preview_work_file) : getRes(R.string.preview_file);
         return dpm.getResources().getString(
                 updatableStringId,
                 () -> itemView.getResources().getString(defaultStringId, fileName),

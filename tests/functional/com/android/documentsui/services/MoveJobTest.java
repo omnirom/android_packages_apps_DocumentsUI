@@ -16,28 +16,50 @@
 
 package com.android.documentsui.services;
 
+import static com.android.documentsui.flags.Flags.FLAG_USE_MATERIAL3;
+import static com.android.documentsui.flags.Flags.FLAG_VISUAL_SIGNALS_RO;
 import static com.android.documentsui.services.FileOperationService.OPERATION_MOVE;
 
 import static com.google.common.collect.Lists.newArrayList;
 
 import android.net.Uri;
+import android.platform.test.annotations.EnableFlags;
 import android.provider.DocumentsContract.Document;
 
+import androidx.test.filters.LargeTest;
 import androidx.test.filters.MediumTest;
+
+import com.android.documentsui.rules.OverrideFlagsRule;
+
+import org.junit.Rule;
+import org.junit.Test;
 
 @MediumTest
 public class MoveJobTest extends AbstractCopyJobTest<MoveJob> {
+
+    @Rule
+    public final OverrideFlagsRule mOverrideFlagsRule = new OverrideFlagsRule();
 
     public MoveJobTest() {
         super(OPERATION_MOVE);
     }
 
+    @Test
     public void testMoveFiles() throws Exception {
         runCopyFilesTest();
 
         mDocs.assertChildCount(mSrcRoot, 0);
     }
 
+    @Test
+    @EnableFlags({FLAG_USE_MATERIAL3, FLAG_VISUAL_SIGNALS_RO})
+    public void testMoveFilesWithJobProgress() throws Exception {
+        runCopyFilesTestWithJobProgress();
+
+        mDocs.assertChildCount(mSrcRoot, 0);
+    }
+
+    @Test
     public void testMoveFiles_NoSrcParent() throws Exception {
         Uri testFile1 = mDocs.createDocument(mSrcRoot, "text/plain", "test1.txt");
         mDocs.writeDocument(testFile1, HAM_BYTES);
@@ -55,6 +77,7 @@ public class MoveJobTest extends AbstractCopyJobTest<MoveJob> {
         mDocs.assertFileContents(mDestRoot.documentId, "test2.txt", FRUITY_BYTES);
     }
 
+    @Test
     public void testMoveVirtualTypedFile() throws Exception {
         mDocs.createFolder(mSrcRoot, "hello");
         Uri testFile = mDocs.createVirtualFile(
@@ -70,6 +93,7 @@ public class MoveJobTest extends AbstractCopyJobTest<MoveJob> {
         mDocs.assertChildCount(mSrcRoot, 1);
     }
 
+    @Test
     public void testMoveVirtualNonTypedFile() throws Exception {
         runCopyVirtualNonTypedFileTest();
 
@@ -77,6 +101,16 @@ public class MoveJobTest extends AbstractCopyJobTest<MoveJob> {
         mDocs.assertChildCount(mSrcRoot, 1);
     }
 
+    @Test
+    @EnableFlags({FLAG_USE_MATERIAL3, FLAG_VISUAL_SIGNALS_RO})
+    public void testMoveVirtualNonTypedFileWithJobProgress() throws Exception {
+        runCopyVirtualNonTypedFileTestWithJobProgress();
+
+        // Should have failed, source not deleted.
+        mDocs.assertChildCount(mSrcRoot, 1);
+    }
+
+    @Test
     public void testMove_BackendSideVirtualTypedFile_Fallback() throws Exception {
         Uri testFile = mDocs.createDocumentWithFlags(
                 mSrcRoot.documentId, "virtual/mime-type", "tokyo.sth",
@@ -92,23 +126,36 @@ public class MoveJobTest extends AbstractCopyJobTest<MoveJob> {
         mDocs.assertChildCount(mSrcRoot, 1);
     }
 
+    @Test
     public void testMoveEmptyDir() throws Exception {
         runCopyEmptyDirTest();
 
         mDocs.assertChildCount(mSrcRoot, 0);
     }
 
+    @Test
+    @EnableFlags({FLAG_USE_MATERIAL3, FLAG_VISUAL_SIGNALS_RO})
+    public void testMoveEmptyDirWithJobProgress() throws Exception {
+        runCopyEmptyDirTestWithJobProgress();
+
+        mDocs.assertChildCount(mSrcRoot, 0);
+    }
+
+    @Test
     public void testMoveDirRecursively() throws Exception {
         runCopyDirRecursivelyTest();
 
         mDocs.assertChildCount(mSrcRoot, 0);
     }
 
+    @LargeTest
+    @Test
     public void testMoveDirRecursively_loadingInFirstCursor() throws Exception {
         mDocs.setLoadingDuration(500);
         testMoveDirRecursively();
     }
 
+    @Test
     public void testNoMoveDirToSelf() throws Exception {
         runNoCopyDirToSelfTest();
 
@@ -116,6 +163,7 @@ public class MoveJobTest extends AbstractCopyJobTest<MoveJob> {
         mDocs.assertChildCount(mSrcRoot, 1);
     }
 
+    @Test
     public void testNoMoveDirToDescendent() throws Exception {
         runNoCopyDirToDescendentTest();
 
@@ -123,6 +171,7 @@ public class MoveJobTest extends AbstractCopyJobTest<MoveJob> {
         mDocs.assertChildCount(mSrcRoot, 1);
     }
 
+    @Test
     public void testMoveFileWithReadErrors() throws Exception {
         runCopyFileWithReadErrorsTest();
 

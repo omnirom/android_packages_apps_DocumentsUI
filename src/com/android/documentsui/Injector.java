@@ -61,11 +61,15 @@ public class Injector<T extends ActionHandler> {
     public AppsRowManager appsRowManager;
 
     public PickResult pickResult;
+    public UserManagerProvider userManagerProvider;
 
     public final DebugHelper debugHelper;
 
-    @ContentScoped
-    public ActionModeController actionModeController;
+    // Returns null when the `use_material3` flag is enabled.
+    @ContentScoped public @Nullable ActionModeController actionModeController;
+
+    // Returns null when the `use_material3` flag is disabled.
+    @ContentScoped public @Nullable SelectionBarController selectionBarController;
 
     @ContentScoped
     public ProfileTabsController profileTabsController;
@@ -89,9 +93,11 @@ public class Injector<T extends ActionHandler> {
             MessageBuilder messages,
             DialogController dialogs,
             Lookup<String, String> fileTypeLookup,
-            Consumer<Collection<RootInfo>> shortcutsUpdater) {
+            Consumer<Collection<RootInfo>> shortcutsUpdater,
+            UserManagerProvider userManagerProvider
+    ) {
         this(features, config, messages, dialogs, fileTypeLookup,
-                shortcutsUpdater, new Model(features));
+                shortcutsUpdater, new Model(features), userManagerProvider);
     }
 
     @VisibleForTesting
@@ -102,7 +108,8 @@ public class Injector<T extends ActionHandler> {
             DialogController dialogs,
             Lookup<String, String> fileTypeLookup,
             Consumer<Collection<RootInfo>> shortcutsUpdater,
-            Model model) {
+            Model model,
+            UserManagerProvider userManagerProvider) {
 
         this.features = features;
         this.config = config;
@@ -112,6 +119,7 @@ public class Injector<T extends ActionHandler> {
         this.shortcutsUpdater = shortcutsUpdater;
         this.mModel = model;
         this.debugHelper = new DebugHelper(this);
+        this.userManagerProvider = userManagerProvider;
     }
 
     public Model getModel() {
@@ -125,6 +133,19 @@ public class Injector<T extends ActionHandler> {
 
     public void updateSharedSelectionTracker(SelectionTracker<String> selectionTracker) {
         selectionMgr.reset(selectionTracker);
+    }
+
+    /**
+     * When the `DirectoryFragment` is instantiated it gets the latest `SelectionBarController` and
+     * updates the selection details at the same time. This avoids having to reinitialize a new one
+     * on every directory navigation
+     */
+    public final SelectionBarController getSelectionBarController(
+            SelectionDetails selectionDetails, EventHandler<MenuItem> menuItemClicker) {
+        if (!isUseMaterial3FlagEnabled()) {
+            return null;
+        }
+        return selectionBarController.updateSelection(selectionDetails, menuItemClicker);
     }
 
     public final ActionModeController getActionModeController(

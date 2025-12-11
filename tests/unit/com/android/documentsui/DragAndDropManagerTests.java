@@ -26,10 +26,8 @@ import android.content.ClipData;
 import android.content.ClipDescription;
 import android.graphics.drawable.Drawable;
 import android.os.PersistableBundle;
-import android.platform.test.annotations.RequiresFlagsDisabled;
-import android.platform.test.annotations.RequiresFlagsEnabled;
-import android.platform.test.flag.junit.CheckFlagsRule;
-import android.platform.test.flag.junit.DeviceFlagsValueProvider;
+import android.platform.test.annotations.DisableFlags;
+import android.platform.test.annotations.EnableFlags;
 import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.View;
@@ -42,6 +40,7 @@ import com.android.documentsui.DragAndDropManager.State;
 import com.android.documentsui.base.DocumentStack;
 import com.android.documentsui.base.RootInfo;
 import com.android.documentsui.flags.Flags;
+import com.android.documentsui.rules.OverrideFlagsRule;
 import com.android.documentsui.services.FileOperationService;
 import com.android.documentsui.services.FileOperations;
 import com.android.documentsui.testing.ClipDatas;
@@ -100,7 +99,7 @@ public class DragAndDropManagerTests {
     private DragAndDropManager mManager;
 
     @Rule
-    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
+    public final OverrideFlagsRule mOverrideFlagsRule = new OverrideFlagsRule();
 
     @Before
     public void setUp() {
@@ -200,7 +199,7 @@ public class DragAndDropManagerTests {
     }
 
     @Test
-    @RequiresFlagsDisabled({Flags.FLAG_USE_MATERIAL3})
+    @DisableFlags({Flags.FLAG_USE_MATERIAL3})
     public void testStartDrag_BuildsCorrectShadow_MultipleDocs_M3Disabled() {
         mManager.startDrag(
                 mStartDragView,
@@ -218,7 +217,7 @@ public class DragAndDropManagerTests {
     }
 
     @Test
-    @RequiresFlagsEnabled({Flags.FLAG_USE_MATERIAL3})
+    @EnableFlags({Flags.FLAG_USE_MATERIAL3})
     public void testStartDrag_BuildsCorrectShadow_MultipleDocs() {
         mManager.startDrag(
                 mStartDragView,

@@ -37,6 +37,9 @@
     <string name="menu_save" msgid="5195367497138965168">"ບັນທຶກ"</string>
     <string name="menu_share" msgid="4307140947108068356">"ແບ່ງປັນ"</string>
     <string name="menu_delete" msgid="1022254131543256626">"ລຶບ"</string>
+    <string name="menu_permanently_delete" msgid="1177349666644056627">"ລຶບອອກຖາວອນ"</string>
+    <string name="menu_move_to_trash" msgid="1809017212900920775">"ຍ້າຍໄປຖັງຂີ້ເຫຍື້ອ"</string>
+    <string name="menu_restore_from_trash" msgid="6335501796145576127">"ກູ້ຄືນ"</string>
     <string name="menu_select_all" msgid="7600576812185570403">"ເລືອກທັງຫມົດ"</string>
     <string name="menu_deselect_all" msgid="7729916068862742979">"ເຊົາເລືອກທັງໝົດ"</string>
     <string name="menu_select" msgid="1366061076507142387">"ເລືອກ"</string>
@@ -44,9 +47,10 @@
     <string name="menu_copy" msgid="7404820171352314754">"ສຳເນົາໄປໃສ່..."</string>
     <string name="menu_move" msgid="2310760789561129882">"ຍ້າຍໄປໃສ່..."</string>
     <string name="menu_compress" msgid="37539111904724188">"ບີບອັດ"</string>
+    <string name="menu_zip" msgid="5734673122376258045">"ລະຫັດໄປສະນີ"</string>
     <string name="menu_extract" msgid="8171946945982532262">"ແຕກໄຟລ໌ໄປ…"</string>
     <string name="menu_extract_all" msgid="7335680068521252718">"ດຶງຂໍ້ມູນຈາກເອກະສານທັງໝົດ…"</string>
-    <string name="menu_extract_here" msgid="8725302045721604762">"ແຍກໄຟລ໌ອອກບ່ອນນີ້"</string>
+    <string name="menu_extract_here" msgid="7120939831786325360">"ແຕກໄຟລ໌"</string>
     <string name="menu_browse" msgid="6007716414766674967">"ເລືອກເບິ່ງ"</string>
     <string name="menu_rename" msgid="1883113442688817554">"ປ່ຽນຊື່"</string>
     <string name="menu_inspect" msgid="7279855349299446224">"ຂໍຂໍ້ມູນ"</string>
@@ -70,6 +74,7 @@
     <string name="button_clear" msgid="5412304437764369441">"ລຶບລ້າງ"</string>
     <string name="button_show_provider" msgid="6905880493806292753">"ສະແດງໃນຜູ້ໃຫ້ບລິການ"</string>
     <string name="button_back" msgid="1888621708934742182">"ກັບຄືນ"</string>
+    <string name="button_show_in_folder" msgid="6674673478637689386">"ສະແດງໃນໂຟນເດີ"</string>
     <string name="not_sorted" msgid="7813496644889115530">"ບໍ່ໄດ້ຈັດຮຽງ"</string>
     <string name="sort_dimension_name" msgid="6325591541414177579">"ຊື່"</string>
     <string name="sort_dimension_summary" msgid="7724534446881397860">"ສະຫຼຸບ"</string>
@@ -114,6 +119,7 @@
     <string name="cross_profile_action_not_allowed_title" msgid="6611281348716476478">"ບໍ່ອະນຸຍາດຄຳສັ່ງນີ້"</string>
     <string name="cross_profile_action_not_allowed_message" msgid="7331275433061690947">"ເພື່ອສຶກສາເພີ່ມເຕີມ, ກະລຸນາຕິດຕໍ່ຜູ້ເບິ່ງແຍງໄອທີຂອງທ່ານ"</string>
     <string name="root_recent" msgid="1080156975424341623">"ຫຼ້າສຸດ"</string>
+    <string name="root_trash" msgid="1869929519939073178">"ຖັງຂີ້ເຫຍື້ອ"</string>
     <string name="root_available_bytes" msgid="8269870862691408864">"ຫວ່າງ <xliff:g id="SIZE">%1$s</xliff:g>"</string>
     <string name="root_type_service" msgid="6521366147466512289">"ບໍລິການບ່ອນຈັດເກັບຂໍ້ມູນ"</string>
     <string name="root_type_shortcut" msgid="6059343175525442279">"ທາງລັດ"</string>
@@ -126,12 +132,17 @@
     <string name="toast_failed_delete" msgid="3453846588205817591">"ບໍ່ສາມາດລຶບບາງເອກະສານໄດ້"</string>
     <string name="toast_share_over_limit" msgid="5805442886537093015">"ບໍ່ສາມາດແບ່ງປັນໄດ້ຫຼາຍກວ່າ <xliff:g id="COUNT">%1$d</xliff:g> ໄຟລ໌"</string>
     <string name="toast_action_not_allowed" msgid="1329382474450572415">"ບໍ່ອະນຸຍາດໃຫ້ໃຊ້ຄຳສັ່ງ"</string>
+    <string name="no_application_dialog_title" msgid="515133936841913019">"ເປີດດ້ວຍ…"</string>
+    <string name="no_application_dialog_message" msgid="5444094365658346573">"ບໍ່ມີການຕິດຕັ້ງແອັບທີ່ຮອງຮັບ. ລອງຕິດຕັ້ງແອັບຈາກ Play Store."</string>
+    <string name="no_application_dialog_button" msgid="5317480122655874659">"ຊອກຫາໃນ Play Store"</string>
     <string name="share_via" msgid="8725082736005677161">"ແບ່ງປັນຜ່ານ"</string>
     <string name="copy_notification_title" msgid="52256435625098456">"ກຳລັງສຳເນົາໄຟລ໌"</string>
     <string name="compress_notification_title" msgid="6830195148113751021">"ກຳລັງບີບອັດໄຟລ໌"</string>
     <string name="extract_notification_title" msgid="5067393961754430469">"ກຳລັງແຕກໄຟລ໌"</string>
     <string name="move_notification_title" msgid="3173424987049347605">"ກຳລັງຍ້າຍໄຟລ໌"</string>
     <string name="delete_notification_title" msgid="2512757431856830792">"ກຳລັງລຶບໄຟລ໌ອອກ"</string>
+    <string name="move_to_trash_notification_title" msgid="6134372996525273852">"ກຳລັບລຶບໄຟລ໌"</string>
+    <string name="restore_from_trash_notification_title" msgid="6818405564188548805">"ການກູ້ຄືນໄຟລ໌"</string>
     <string name="copy_remaining" msgid="5390517377265177727">"ຍັງເຫຼືອອີກ <xliff:g id="DURATION">%s</xliff:g>"</string>
     <plurals name="copy_begin" formatted="false" msgid="151184708996738192">
       <item quantity="other">ກຳລັງສຳເນົາໄຟລ໌ <xliff:g id="COUNT_1">%1$d</xliff:g> ໄຟລ໌.</item>
@@ -153,29 +164,26 @@
       <item quantity="other">ກຳລັງລຶບ <xliff:g id="COUNT_1">%1$d</xliff:g> ໄຟລ໌ອອກ.</item>
       <item quantity="one">ກຳ​ລັງ​ລຶບ <xliff:g id="COUNT_0">%1$d</xliff:g> ໄຟ​ລ໌.</item>
     </plurals>
+    <string name="trashing" msgid="4643112474465979863">"{count,plural, =1{ກຳລັງລຶບ <xliff:g id="COUNT_0">{count}</xliff:g> ລາຍການໄປໃສ່ຖັງຂີ້ເຫຍື້ອ}other{ກຳລັງລຶບ <xliff:g id="COUNT_1">{count}</xliff:g> ລາຍການໄປໃສ່ຖັງຂີ້ເຫຍື້ອ}}"</string>
+    <string name="restoring_from_trash" msgid="6346617909485060438">"{count,plural, =1{ກຳລັງກູ້ຄືນ <xliff:g id="COUNT_0">{count}</xliff:g> ລາຍການ}other{ກຳລັງກູ້ຄືນ <xliff:g id="COUNT_1">{count}</xliff:g> ລາຍການ}}"</string>
     <string name="undo" msgid="2902438994196400565">"ຍົກເລີກ"</string>
     <string name="copy_preparing" msgid="4759516490222449324">"ກຳລັງກະກຽມ..."</string>
     <string name="compress_preparing" msgid="7401605598969019696">"ກຳລັງກະກຽມ..."</string>
     <string name="extract_preparing" msgid="4796626960061745796">"ກຳລັງກະກຽມ..."</string>
     <string name="move_preparing" msgid="6504239656430530761">"ກຳລັງກະກຽມ..."</string>
     <string name="delete_preparing" msgid="7339349837842802508">"ກຳລັງກະກຽມ..."</string>
+    <string name="move_to_trash_preparing" msgid="6180195603212537441">"ກຳລັງກະກຽມ..."</string>
+    <string name="restore_from_trash_preparing" msgid="2829747628222239861">"ກຳລັງກະກຽມ..."</string>
     <string name="delete_progress" msgid="2627631054702306423">"<xliff:g id="COUNT_0">%1$d</xliff:g> / <xliff:g id="TOTALCOUNT">%2$d</xliff:g>"</string>
-    <plurals name="copy_error_notification_title" formatted="false" msgid="3188432450429390963">
-      <item quantity="other">ບໍ່ສາມາດສຳເນົາໄຟລ໌ <xliff:g id="COUNT_1">%1$d</xliff:g> ໄຟລ໌ໄດ້.</item>
-      <item quantity="one">Couldn’t copy <xliff:g id="COUNT_0">%1$d</xliff:g> item</item>
-    </plurals>
-    <plurals name="compress_error_notification_title" formatted="false" msgid="3043630066678213644">
-      <item quantity="other">ບໍ່ສາມາດບີບອັດ <xliff:g id="COUNT_1">%1$d</xliff:g> ໄຟລ໌ໄດ້</item>
-      <item quantity="one">ບໍ່ສາມາດບີບອັດ <xliff:g id="COUNT_0">%1$d</xliff:g> ໄຟລ໌ໄດ້</item>
-    </plurals>
-    <plurals name="move_error_notification_title" formatted="false" msgid="2185736082411854754">
-      <item quantity="other">ບໍ່ສາມາດຍ້າຍ <xliff:g id="COUNT_1">%1$d</xliff:g> ໄຟລ໌ໄດ້</item>
-      <item quantity="one">Couldn’t move <xliff:g id="COUNT_0">%1$d</xliff:g> item</item>
-    </plurals>
-    <plurals name="delete_error_notification_title" formatted="false" msgid="7568122018481625267">
-      <item quantity="other">ບໍ່ສາມາດລຶບໄຟລ໌ <xliff:g id="COUNT_1">%1$d</xliff:g> ໄຟລ໌ໄດ້.</item>
-      <item quantity="one">Couldn’t delete <xliff:g id="COUNT_0">%1$d</xliff:g> item</item>
-    </plurals>
+    <string name="move_to_trash_progress" msgid="7117416860391196406">"<xliff:g id="COUNT_0">%1$d</xliff:g> / <xliff:g id="TOTALCOUNT">%2$d</xliff:g>"</string>
+    <string name="restore_from_trash_progress" msgid="6003816126633922428">"<xliff:g id="COUNT_0">%1$d</xliff:g> / <xliff:g id="TOTALCOUNT">%2$d</xliff:g>"</string>
+    <string name="copy_error_notification_title" msgid="5426120176307563562">"{count,plural, =1{ບໍ່ສາມາດສຳເນົາ <xliff:g id="COUNT_0">{count}</xliff:g> ລາຍການໄດ້}other{ບໍ່ສາມາດສຳເນົາ <xliff:g id="COUNT_1">{count}</xliff:g> ລາຍການໄດ້}}"</string>
+    <string name="compress_error_notification_title" msgid="7238511273511460182">"{count,plural, =1{ບໍ່ສາມາດບີບອັດ <xliff:g id="COUNT_0">{count}</xliff:g> ລາຍການໄດ້}other{ບໍ່ສາມາດບີບອັດ <xliff:g id="COUNT_1">{count}</xliff:g> ລາຍການໄດ້}}"</string>
+    <string name="extract_error_notification_title" msgid="2644824788957108658">"{count,plural, =1{ບໍ່ສາມາດແຕກໄຟລ໌ <xliff:g id="COUNT_0">{count}</xliff:g> ລາຍການໄດ້}other{ບໍ່ສາມາດແຕກໄຟລ໌ <xliff:g id="COUNT_1">{count}</xliff:g> ລາຍການໄດ້}}"</string>
+    <string name="move_error_notification_title" msgid="7094494564254143696">"{count,plural, =1{ບໍ່ສາມາດຍ້າຍ <xliff:g id="COUNT_0">{count}</xliff:g> ລາຍການໄດ້}other{ບໍ່ສາມາດຍ້າຍ <xliff:g id="COUNT_1">{count}</xliff:g> ລາຍການໄດ້}}"</string>
+    <string name="delete_error_notification_title" msgid="6510460288416352803">"{count,plural, =1{ບໍ່ສາມາດລຶບ <xliff:g id="COUNT_0">{count}</xliff:g> ລາຍການໄດ້}other{ບໍ່ສາມາດລຶບ <xliff:g id="COUNT_1">{count}</xliff:g> ລາຍການໄດ້}}"</string>
+    <string name="move_to_trash_error_notification_title" msgid="2766270864756812690">"{count,plural, =1{ບໍ່ສາມາດລຶບ <xliff:g id="COUNT_0">{count}</xliff:g> ລາຍການໄປໃສ່ຖັງຂີ້ເຫຍື້ອໄດ້}other{ບໍ່ສາມາດລຶບ <xliff:g id="COUNT_1">{count}</xliff:g> ລາຍການໄປໃສ່ຖັງຂີ້ເຫຍື້ອໄດ້}}"</string>
+    <string name="restore_from_trash_error_notification_title" msgid="5097907450416686866">"{count,plural, =1{ບໍ່ສາມາດກູ້ຄືນ <xliff:g id="COUNT_0">{count}</xliff:g> ລາຍການໄດ້}other{ບໍ່ສາມາດກູ້ຄືນ <xliff:g id="COUNT_1">{count}</xliff:g> ລາຍການໄດ້}}"</string>
     <string name="notification_touch_for_details" msgid="2385563502445129570">"ແຕະເພື່ອເບິ່ງລາຍລະອຽດ"</string>
     <string name="close" msgid="905969391788869975">"ປິດ"</string>
     <plurals name="copy_failure_alert_content" formatted="false" msgid="5570549471912990536">
@@ -206,11 +214,39 @@
       <item quantity="other">ສຳເນົາໄຟລ໌ <xliff:g id="COUNT_1">%1$d</xliff:g> ໄຟລ໌ໃສ່ຄລິບບອດແລ້ວ.</item>
       <item quantity="one">Copied <xliff:g id="COUNT_0">%1$d</xliff:g> item to clipboard.</item>
     </plurals>
+    <string name="read_only_label" msgid="894442752344379606">"ອ່ານຢ່າງດຽວ"</string>
+    <string name="read_only_explanation" msgid="213951358525192590">"ທ່ານສາມາດເບິ່ງໄຟລ໌ເຫຼົ່ານີ້ໄດ້ ແຕ່ລະບົບບໍ່ຮອງຮັບຄຳສັ່ງບາງຢ່າງ"</string>
+    <string name="cannot_extract_in_read_only_folder" msgid="8234900543730064252">"ໄຟລ໌ທີ່ເກັບໄວ້ໃນແຟ້ມນີ້ຢູ່ໃນສະຖານທີ່ແບບອ່ານຢ່າງດຽວ ແລະ ບໍ່ສາມາດແຕກໄຟລ໌ຢູ່ບ່ອນນີ້ໄດ້."</string>
     <string name="file_operation_rejected" msgid="4301554203329008794">"ບໍ່ຮອງຮັບການເຮັດວຽກຂອງໄຟລ໌."</string>
     <string name="file_operation_error" msgid="2234357335716533795">"ການເຮັດວຽກຂອງໄຟລ໌ບໍ່ສຳເລັດ."</string>
     <string name="rename_error" msgid="6700093173508118635">"ປ່ຽນຊື່ເອກະສານບໍ່ສຳເລັດ"</string>
     <string name="menu_eject_root" msgid="9215040039374893613">"ຖອດອອກ"</string>
     <string name="notification_copy_files_converted_title" msgid="6916768494891833365">"ປ່ຽນແປງບາງໄຟລ໌ແລ້ວ"</string>
+    <string name="copy_in_progress" msgid="3314396340163205014">"{count,plural, =1{ກຳລັງສຳເນົາ “<xliff:g id="FILENAME">{filename}</xliff:g>” ໄປໃສ່ “<xliff:g id="DIRECTORY_0">{directory}</xliff:g>”}other{ກຳລັງສຳເນົາ # ໄຟລ໌ໄປໃສ່ “<xliff:g id="DIRECTORY_1">{directory}</xliff:g>”}}"</string>
+    <string name="extract_in_progress" msgid="519951867474301835">"{count,plural, =1{ກຳລັງແຕກໄຟລ໌ “<xliff:g id="FILENAME">{filename}</xliff:g>” ໄປໃສ່ “<xliff:g id="DIRECTORY_0">{directory}</xliff:g>”}other{ກຳລັງແຕກໄຟລ໌ທີ່ເກັບໄວ້ໃນແຟ້ມ # ລາຍການໄປໃສ່ “<xliff:g id="DIRECTORY_1">{directory}</xliff:g>”}}"</string>
+    <string name="move_in_progress" msgid="2569791135683944801">"{count,plural, =1{ກຳລັງຍ້າຍ “<xliff:g id="FILENAME">{filename}</xliff:g>” ໄປໃສ່ “<xliff:g id="DIRECTORY_0">{directory}</xliff:g>”}other{ກຳລັງຍ້າຍ # ໄຟລ໌ໄປໃສ່ “<xliff:g id="DIRECTORY_1">{directory}</xliff:g>”}}"</string>
+    <string name="delete_in_progress" msgid="9032473164450943788">"{count,plural, =1{ກຳລັງລຶບ “<xliff:g id="FILENAME">{filename}</xliff:g>”}other{ກຳລັງລຶບ # ໄຟລ໌}}"</string>
+    <string name="trash_in_progress" msgid="6889113199087672853">"{count,plural, =1{ກຳລັງລຶບໄຟລ໌ <xliff:g id="FILENAME">{filename}</xliff:g> ໄປໃສ່ຖັງຂີ້ເຫຍື້ອ}other{ກຳລັງລຶບ # ໄຟລ໌ໄປໃສ່ຖັງຂີ້ເຫຍື້ອ}}"</string>
+    <string name="restore_in_progress" msgid="6756221866797865046">"{count,plural, =1{ກຳລັງກູ້ຄືນ <xliff:g id="FILENAME">{filename}</xliff:g>}other{ກຳລັງກູ້ຄືນ # ໄຟລ໌}}"</string>
+    <string name="compress_in_progress" msgid="6585173688835909381">"{count,plural, =1{ກຳລັງບີບອັດ “<xliff:g id="FILENAME">{filename}</xliff:g>”}other{ກຳລັງບີບອັດ # ໄຟລ໌}}"</string>
+    <string name="job_progress_icon_label" msgid="1387365706178067075">"ສະແດງຄວາມຄືບໜ້າຂອງໄຟລ໌"</string>
+    <string name="job_progress_panel_title" msgid="1640388840961608168">"ຄວາມຄືບໜ້າຂອງໄຟລ໌"</string>
+    <string name="job_progress_item_completed" msgid="3933347715328014840">"ສຳເລັດແລ້ວ"</string>
+    <string name="job_progress_item_canceled" msgid="8915289522101993231">"ຍົກເລີກແລ້ວ"</string>
+    <string name="job_progress_item_see_details" msgid="2069387639574541325">"ເບິ່ງລາຍລະອຽດ"</string>
+    <string name="job_progress_item_byte_progress" msgid="5457665342067136443">"<xliff:g id="CURRENTBYTES">%1$s</xliff:g> ຈາກທັງໝົດ <xliff:g id="TOTALBYTES">%2$s</xliff:g>"</string>
+    <string name="copy_completed" msgid="3749037014674785400">"ສຳເນົາແລ້ວ"</string>
+    <string name="move_completed" msgid="3981250605092729273">"ຍ້າຍແລ້ວ"</string>
+    <string name="delete_completed" msgid="4149401155614626199">"ລຶບແລ້ວ"</string>
+    <string name="compress_completed" msgid="6522047921428919799">"ບີບອັດແລ້ວ"</string>
+    <string name="extract_completed" msgid="8824595789915249972">"ແຕກໄຟລ໌ແລ້ວ"</string>
+    <string name="copy_failed" msgid="3700193913993844675">"ບໍ່ສາມາດສຳເນົາໄດ້"</string>
+    <string name="move_failed" msgid="7692364307225994220">"ບໍ່ສາມາດຍ້າຍໄດ້"</string>
+    <string name="delete_failed" msgid="2642684566325252513">"ບໍ່ສາມາດລຶບໄດ້"</string>
+    <string name="compress_failed" msgid="7397502181042157261">"ບໍ່ສາມາດບີບອັດໄດ້"</string>
+    <string name="extract_failed" msgid="8372397499452831323">"ບໍ່ສາມາດແຕກໄຟລ໌ໄດ້"</string>
+    <string name="expand_label" msgid="5683357671239615207">"ຂະຫຍາຍ"</string>
+    <string name="collapse_label" msgid="4530974883269531062">"ຫຍໍ້ລົງ"</string>
     <string name="open_external_dialog_request" msgid="8173558471322861268">"ອະນຸຍາດສິດເຂົ້າເຖິງໃຫ້ <xliff:g id="APPNAME"><b>^1</b></xliff:g> ເພື່ອເຂົ້າໄດເຣກທໍຣີ <xliff:g id="DIRECTORY"><i>^2</i></xliff:g> ຢູ່ <xliff:g id="STORAGE"><i>^3</i></xliff:g> ບໍ?"</string>
     <string name="open_external_dialog_request_primary_volume" msgid="2240992164087948176">"ອະນຸມັດ <xliff:g id="APPNAME"><b>^1</b></xliff:g> ໃຫ້ເຂົ້າຫາໄດເຣັກທໍຣີ <xliff:g id="DIRECTORY"><i>^2</i></xliff:g> ບໍ?"</string>
     <string name="open_external_dialog_root_request" msgid="6776729293982633">"ອະນຸມັດ <xliff:g id="APPNAME"><b>^1</b></xliff:g> ໃຫ້ເຂົ້າເຖິງຂໍ້ມູນຂອງທ່ານ ຮວມທັງຮູບພາບ ແລະ ວິດີໂອໃນ <xliff:g id="STORAGE"><i>^2</i></xliff:g> ບໍ?"</string>
@@ -220,6 +256,12 @@
       <item quantity="other">ເລືອກ <xliff:g id="COUNT_1">%1$d</xliff:g> ລາຍການແລ້ວ</item>
       <item quantity="one">ເລືອກ <xliff:g id="COUNT_0">%1$d</xliff:g> ລາຍການແລ້ວ</item>
     </plurals>
+    <string name="clear_selection" msgid="5965968983023105329">"ລຶບລ້າງການເລືອກ"</string>
+    <string name="document_click_action" msgid="8073338575301415356">"ເປີດ"</string>
+    <string name="selected_document_click_action" msgid="792826130200234885">"ເຊົາເລືອກ"</string>
+    <string name="document_long_click_action" msgid="3789836661597702666">"ເລືອກ"</string>
+    <string name="selected_document_long_click_action" msgid="666372407184527109">"ລາກ"</string>
+    <string name="document_long_click_action_picker" msgid="943888101827856784">"ເລືອກຫຼາຍອັນ"</string>
     <plurals name="elements_dragged" formatted="false" msgid="5932571296037626279">
       <item quantity="other"><xliff:g id="COUNT_1">%1$d</xliff:g> ລາຍການ</item>
       <item quantity="one"><xliff:g id="COUNT_0">%1$d</xliff:g> ລາຍການ</item>
@@ -245,6 +287,7 @@
     <string name="cant_display_content" msgid="8633226333229417237">"ບໍ່ສາມາດສະແດງເນື້ອຫາໄດ້"</string>
     <string name="sign_in" msgid="6253762676723505592">"ເຂົ້າສູ່ລະບົບ"</string>
     <string name="new_archive_file_name" msgid="1604650338077249838">"archive<xliff:g id="EXTENSION">%s</xliff:g>"</string>
+    <string name="new_archive_file_name_2" msgid="6787685985722032255">"ເກັບໄວ້ໃນແຟ້ມ"</string>
     <string name="overwrite_file_confirmation_message" msgid="2496109652768222716">"ຂຽນທັບ <xliff:g id="NAME">%1$s</xliff:g> ບໍ?"</string>
     <string name="continue_in_background" msgid="1974214559047793331">"ສືບຕໍ່ໃນພື້ນຫຼັງ"</string>
     <plurals name="selected_count" formatted="false" msgid="7555250236512981129">
@@ -285,13 +328,33 @@
     <string name="directory_blocked_header_subtitle" msgid="2829150911849033408">"ໃຫ້ເລືອກໂຟນເດີອື່ນເພື່ອປົກປ້ອງຄວາມເປັນສ່ວນຕົວຂອງທ່ານ"</string>
     <string name="create_new_folder_button" msgid="8859613309559794890">"ສ້າງໂຟນເດີໃໝ່"</string>
     <string name="search_bar_hint" msgid="146031513183888721">"ຊອກຫາອຸປະກອນນີ້"</string>
+    <string name="search_bar_clear" msgid="2072000748823434188">"ລຶບລ້າງຂໍ້ຄວາມ"</string>
+    <string name="search_location_root_folder" msgid="4280523560213522303">"ໂຟນເດີ root"</string>
+    <string name="search_location_everywhere" msgid="747799487494833887">"ທຸກບ່ອນ"</string>
+    <string name="search_last_modified_any_time" msgid="6027501367865939696">"ຕະຫຼອດເວລາ"</string>
+    <string name="search_last_modified_1_day" msgid="7775353928859139915">"ມື້ນີ້"</string>
+    <string name="search_last_modified_2_days" msgid="7885735119033678756">"ມື້ວານ"</string>
+    <string name="search_last_modified_7_days" msgid="7634290601544418836">"ອາທິດທີ່ຜ່ານມາ"</string>
+    <string name="search_last_modified_30_days" msgid="4936787546211708940">"ເດືອນທີ່ຜ່ານມາ"</string>
+    <string name="search_last_modified_365_days" msgid="7147134152974373466">"ປີທີ່ຜ່ານມາ"</string>
+    <string name="search_file_type_all" msgid="6613664493134355781">"ທຸກປະເພດ"</string>
     <string name="delete_search_history" msgid="2202015025607694515">"ລຶບປະຫວັດການຊອກຫາ <xliff:g id="TEXT">%1$s</xliff:g>"</string>
     <string name="personal_tab" msgid="3878576287868528503">"ສ່ວນຕົວ"</string>
-    <string name="work_tab" msgid="7265359366883747413">"ວຽກ"</string>
+    <string name="work_tab" msgid="7265359366883747413">"ບ່ອນເຮັດວຽກ"</string>
     <string name="a11y_work" msgid="7504431382825242153">"ວຽກ"</string>
     <string name="drag_from_another_app" msgid="8310249276199969905">"ບໍ່ສາມາດຍ້າຍໄຟລ໌ຈາກແອັບອື່ນໄດ້."</string>
     <string name="grid_mode_showing" msgid="2803166871485028508">"ກຳລັງສະແດງໃນໂໝດຕາຕະລາງ."</string>
     <string name="list_mode_showing" msgid="1225413902295895166">"ກຳລັງສະແດງໃນໂໝດລາຍຊື່."</string>
     <string name="bullet" msgid="5606740650312122766">"•"</string>
     <string name="file_name_hint" msgid="7843637320487415838">"ຊື່ໄຟລ໌"</string>
+    <string name="peek_no_preview" msgid="8717084152736749464">"ບໍ່ມີຕົວຢ່າງ"</string>
+    <string name="peek_metadata_header_title" msgid="6196387248590120756">"ລາຍລະອຽດ"</string>
+    <string name="peek_metadata_general_info_title" msgid="5805064715498467299">"ຂໍ້ມູນທົ່ວໄປ"</string>
+    <string name="peek_metadata_size" msgid="2377426288276139988">"ຂະໜາດ"</string>
+    <string name="peek_metadata_type" msgid="1386923517471758392">"ປະເພດ"</string>
+    <string name="peek_metadata_date_modified" msgid="5403086549396155362">"ວັນທີແກ້ໄຂ"</string>
+    <string name="a11y_peek_navigation_icon" msgid="6692873662104342476">"ເຊື່ອງຕົວຢ່າງໄຟລ໌"</string>
+    <string name="a11y_peek_image_preview" msgid="3917148390186060263">"ຕົວຢ່າງຮູບຂອງ <xliff:g id="FILENAME">%s</xliff:g>"</string>
+    <string name="a11y_peek_hide_info_button" msgid="918293386310947930">"ເຊື່ອງແຜງຂໍ້ມູນ"</string>
+    <string name="a11y_peek_show_info_button" msgid="9028075652389911413">"ສະແດງແຜງຂໍ້ມູນ"</string>
 </resources>

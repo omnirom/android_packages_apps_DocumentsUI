@@ -16,6 +16,8 @@
 
 package com.android.documentsui.archives;
 
+import static com.android.documentsui.util.Material3Config.getRes;
+
 import android.content.ContentProviderClient;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
@@ -34,6 +36,7 @@ import android.provider.DocumentsProvider;
 import android.util.Log;
 
 import androidx.annotation.GuardedBy;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.documentsui.R;
@@ -92,7 +95,7 @@ public class ArchivesProvider extends DocumentsProvider {
     }
 
     @Override
-    public Cursor queryChildDocuments(String documentId, @Nullable String[] projection,
+    public Cursor queryChildDocuments(@NonNull String documentId, @Nullable String[] projection,
             @Nullable String sortOrder)
             throws FileNotFoundException {
         final ArchiveId archiveId = ArchiveId.fromDocumentId(documentId);
@@ -116,8 +119,9 @@ public class ArchivesProvider extends DocumentsProvider {
                 // Return an empty cursor with EXTRA_LOADING, which shows spinner
                 // in DocumentsUI. Once the archive is loaded, the notification will
                 // be sent, and the directory reloaded.
-                bundle.putString(DocumentsContract.EXTRA_ERROR,
-                        getContext().getString(R.string.archive_loading_failed));
+                bundle.putString(
+                        DocumentsContract.EXTRA_ERROR,
+                        getContext().getString(getRes(R.string.archive_loading_failed)));
                 break;
         }
 
@@ -136,7 +140,7 @@ public class ArchivesProvider extends DocumentsProvider {
     }
 
     @Override
-    public String getDocumentType(String documentId) throws FileNotFoundException {
+    public String getDocumentType(@NonNull String documentId) throws FileNotFoundException {
         final ArchiveId archiveId = ArchiveId.fromDocumentId(documentId);
         if (archiveId.mPath.equals("/")) {
             return Document.MIME_TYPE_DIR;
@@ -179,7 +183,7 @@ public class ArchivesProvider extends DocumentsProvider {
     }
 
     @Override
-    public Cursor queryDocument(String documentId, @Nullable String[] projection)
+    public Cursor queryDocument(@NonNull String documentId, @Nullable String[] projection)
             throws FileNotFoundException {
         final ArchiveId archiveId = ArchiveId.fromDocumentId(documentId);
         if (archiveId.mPath.equals("/")) {
@@ -244,7 +248,7 @@ public class ArchivesProvider extends DocumentsProvider {
      * @see ParcelFileDescriptor#MODE_READ
      * @see ParcelFileDescriptor#MODE_WRITE
      */
-    public static Uri buildUriForArchive(Uri externalUri, int accessMode) {
+    public static Uri buildUriForArchive(@NonNull Uri externalUri, int accessMode) {
         return DocumentsContract.buildDocumentUri(AUTHORITY,
                 new ArchiveId(externalUri, accessMode, "/").toDocumentId());
     }
@@ -282,7 +286,7 @@ public class ArchivesProvider extends DocumentsProvider {
     /**
      * The archive won't close until all clients release it.
      */
-    private void acquireArchive(String documentId) {
+    private void acquireArchive(@NonNull String documentId) {
         final ArchiveId archiveId = ArchiveId.fromDocumentId(documentId);
         synchronized (mArchives) {
             final Key key = Key.fromArchiveId(archiveId);
@@ -301,7 +305,7 @@ public class ArchivesProvider extends DocumentsProvider {
     /**
      * If all clients release the archive, then it will be closed.
      */
-    private void releaseArchive(String documentId) {
+    private void releaseArchive(@NonNull String documentId) {
         final ArchiveId archiveId = ArchiveId.fromDocumentId(documentId);
         final Key key = Key.fromArchiveId(archiveId);
         synchronized (mArchives) {
@@ -314,7 +318,7 @@ public class ArchivesProvider extends DocumentsProvider {
         }
     }
 
-    private Loader getLoaderOrThrow(String documentId) {
+    private Loader getLoaderOrThrow(@NonNull String documentId) {
         final ArchiveId id = ArchiveId.fromDocumentId(documentId);
         final Key key = Key.fromArchiveId(id);
         synchronized (mArchives) {

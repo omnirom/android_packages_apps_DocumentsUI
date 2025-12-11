@@ -26,8 +26,17 @@
          layouts we reduce this to an input-box adjacent to menu actions. -->
     <bool name="full_bar_search_view">true</bool>
 
+    <!-- Indicates if showing Audio / Downloads / Images / Video roots -->
+    <bool name="show_media_roots">true</bool>
+
     <!-- Indicates if showing as search bar design -->
     <bool name="show_search_bar">false</bool>
+
+    <!-- Indicates if showing the apps row -->
+    <bool name="show_apps_row">true</bool>
+
+    <!-- Indicates if the "Cancel" button should show in the various pickers. -->
+    <bool name="show_picker_cancel_button">false</bool>
 
     <!-- Indicates if showing hidden files by default -->
     <bool name="show_hidden_files_by_default">false</bool>
@@ -39,6 +48,8 @@
 
     <string name="datetime_format_12" translatable="false">MMM dd, yyyy, h:mm a</string>
     <string name="datetime_format_24" translatable="false">MMM dd, yyyy, H:mm</string>
+    <string name="peek_datetime_format_12" translatable="false">MMMM dd, yyyy, h:mm a</string>
+    <string name="peek_datetime_format_24" translatable="false">MMMM dd, yyyy, H:mm</string>
 
     <!--
         New features must be added behind a boolean flag prefixed w/ "feature_".
@@ -75,4 +86,14 @@
 
     <!-- The maximum record of search history. -->
     <integer name="config_maximum_search_history">200</integer>
+
+    <!-- The Material3 theme is only enabled IFF this config is true AND the flag `use_material3` is enabled. -->
+    <bool name="force_material3">false</bool>
+
+    <!-- Dictates whether we show a search icon or a docked search bar in the toolbar. It's false
+         on small screens to show the icon and true on larger screens to show the docked search. -->
+    <bool name="show_docked_search">false</bool>
+
+    <!-- Indicate if we want to move the Search chip position when it's selected/unselected. -->
+    <bool name="move_search_chip_when_selected">true</bool>
 </resources>
